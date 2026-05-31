@@ -14,9 +14,11 @@ export const StyledPaper = styled(Paper)(({ theme }) => ({
   flexDirection: 'column',
   alignItems: 'center',
   borderRadius: '30% / 100%',
-  padding: `${theme.spacing(6)} ${theme.spacing(8)}`,
-  background: `radial-gradient(${theme.palette.primary.light}, ${theme.palette.secondary.light})`,
+  background: `radial-gradient(${theme.palette.primary.main} 10%, ${theme.palette.secondary.main} 300%)`,
   gap: theme.spacing(2),
+  padding: `${theme.spacing(6)} ${theme.spacing(12)}`,
+  width: '100%',
+  maxWidth: 500,
 }))
 
 export const Title = styled(Typography)(({ theme }) => ({

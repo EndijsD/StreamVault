@@ -7,20 +7,23 @@ export const tokens: ThemeOptions = {
       main: '#3F5BFF',
       light: '#6D8BFF',
       dark: '#1A2E9E',
-      //   contrastText: "#fff",
     },
+    // secondary: {
+    //   main: '#7C5CFF',
+    //   light: '#A28BFF',
+    //   dark: '#4E33CC',
+    // },
     secondary: {
-      main: '#7C5CFF',
-      light: '#A28BFF',
-      dark: '#4E33CC',
-      //   contrastText: "#fff",
+      main: '#FE6B8B',
+      light: '#FF9DB2',
+      dark: '#D94D6D',
     },
-    info: {
-      main: '#53C8FF',
-      light: '#8BE3FF',
-      dark: '#1F9EDB',
-      //   contrastText: '#fff',
-    },
+    // info: {
+    //   main: '#53C8FF',
+    //   light: '#8BE3FF',
+    //   dark: '#1F9EDB',
+    //   //   contrastText: '#fff',
+    // },
     // background: {
     //   paper: '#07124F',
     //   default: '#010A3D',
@@ -33,26 +36,30 @@ export const tokens: ThemeOptions = {
   //   },
 }
 
-// export const components: ThemeOptions['components'] = {
-//   MuiButton: {
-//     defaultProps: {
-//       disableElevation: true,
-//     },
-//     styleOverrides: {
-//       root: {
-//         minWidth: 'unset',
-//         textTransform: 'capitalize',
-//         '&:hover': {
-//           textDecoration: 'underline',
-//         },
-//       },
-//     },
-//   },
-// }
+export const components: ThemeOptions['components'] = {
+  MuiButton: {
+    defaultProps: {
+      disableElevation: true,
+    },
+    styleOverrides: {
+      root: {
+        minWidth: 100,
+        fontWeight: 'bold',
+      },
+    },
+  },
+  MuiFormControl: {
+    styleOverrides: {
+      root: {
+        width: '100%',
+      },
+    },
+  },
+}
 
 const theme = createTheme({
   ...tokens,
-  //   components: components,
+  components: components,
 })
 
 export default theme
