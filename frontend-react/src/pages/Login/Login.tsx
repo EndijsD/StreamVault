@@ -1,27 +1,30 @@
-import { TextField } from '@mui/material'
-import { useState } from 'react'
-import * as S from './styles'
-import type { LoginForm } from './types'
-import type { Errors } from '../../assets/GeneralTypes'
-import { validateEmpty } from '../../assets/GeneralFunctions'
-import { useAppContext } from '../../assets/contexts/App/useAppContext'
+import { TextField } from '@mui/material';
+import { useState } from 'react';
+import * as S from './styles';
+import type { LoginForm } from './types';
+import type { Errors } from '../../assets/GeneralTypes';
+import { validateEmpty } from '../../assets/GeneralFunctions';
+import { useAppContext } from '../../assets/contexts/App/useAppContext';
+import { useNavigate } from 'react-router';
 
 const Login = () => {
-  const { t } = useAppContext()
+  const { t } = useAppContext();
+  const nav = useNavigate();
   const [form, setForm] = useState<LoginForm>({
     email: '',
     password: '',
-  })
-  const [errors, setErrors] = useState<Errors<LoginForm>>({})
+  });
+  const [errors, setErrors] = useState<Errors<LoginForm>>({});
 
   const handleSubmit = () => {
+    nav('/library');
     const newErrors: Errors<LoginForm> = {
       ...validateEmpty(form),
-    }
+    };
 
-    setErrors({ ...newErrors })
-    if (Object.keys(newErrors).length !== 0) return
-  }
+    setErrors({ ...newErrors });
+    if (Object.keys(newErrors).length !== 0) return;
+  };
 
   return (
     <S.Container>
@@ -33,8 +36,8 @@ const Login = () => {
           label={t('email')}
           value={form.email}
           onChange={(event) => {
-            setForm({ ...form, email: event.target.value })
-            setErrors({ ...errors, email: null })
+            setForm({ ...form, email: event.target.value });
+            setErrors({ ...errors, email: null });
           }}
           type='email'
           error={!!errors.email}
@@ -46,8 +49,8 @@ const Login = () => {
           label={t('password')}
           value={form.password}
           onChange={(event) => {
-            setForm({ ...form, password: event.target.value })
-            setErrors({ ...errors, password: null })
+            setForm({ ...form, password: event.target.value });
+            setErrors({ ...errors, password: null });
           }}
           type='password'
           error={!!errors.password}
@@ -59,7 +62,7 @@ const Login = () => {
         </S.StyledButton>
       </S.StyledPaper>
     </S.Container>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

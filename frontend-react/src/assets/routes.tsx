@@ -1,8 +1,9 @@
-import { createBrowserRouter } from 'react-router'
-import NotFound from '../pages/NotFound'
-import Landing from '../pages/Landing'
-import Layout from '../components/Layout'
-import Login from '../pages/Login'
+import { createBrowserRouter } from 'react-router';
+import NotFound from '../pages/NotFound';
+import Landing from '../pages/Landing';
+import Layout from '../components/Layout';
+import Login from '../pages/Login';
+import Library from '../pages/Library';
 
 export const router = createBrowserRouter([
   {
@@ -18,9 +19,13 @@ export const router = createBrowserRouter([
         element: <Login />,
       },
       {
+        path: 'library',
+        element: <Library />,
+      },
+      {
         path: '*',
         element: <NotFound />,
       },
     ],
   },
-])
+]);

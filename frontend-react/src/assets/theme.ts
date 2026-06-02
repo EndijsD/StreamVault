@@ -1,5 +1,5 @@
-import { createTheme } from '@mui/material/styles'
-import type { ThemeOptions } from '@mui/material/styles'
+import { createTheme } from '@mui/material/styles';
+import type { ThemeOptions } from '@mui/material/styles';
 
 export const tokens: ThemeOptions = {
   palette: {
@@ -30,11 +30,12 @@ export const tokens: ThemeOptions = {
     // },
   },
 
-  //   typography: {
-  //     fontFamily:
-  //       'var(--font-primary, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)',
-  //   },
-}
+  typography: {
+    // allVariants: { color: '#010A3D' },
+    // fontFamily:
+    //   'var(--font-primary, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)',
+  },
+};
 
 export const components: ThemeOptions['components'] = {
   MuiButton: {
@@ -55,11 +56,11 @@ export const components: ThemeOptions['components'] = {
       },
     },
   },
-}
+};
 
 const theme = createTheme({
   ...tokens,
   components: components,
-})
+});
 
-export default theme
+export default theme;
