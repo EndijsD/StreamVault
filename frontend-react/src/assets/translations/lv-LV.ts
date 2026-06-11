@@ -8,4 +8,11 @@ export default {
   page_not_found: 'Lapa nav atrasta',
   back_to_home: 'Atpakaļ uz sākumlapu',
   field_required: 'Šis lauks ir obligāts',
+  login_credentials_error: 'Nepareizs e-pasts vai parole',
+  something_went_wrong: 'Kaut kas nogāja greizi',
+  name: 'Vārds',
+  surname: 'Uzvārds',
+  confirm_password: 'Apstipriniet paroli',
+  no_account_yet: 'Vai jums vēl nav konta?',
+  already_have_an_account: 'Vai jums jau ir konts?',
 } satisfies Record<TranslationKey, string>

@@ -1,6 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { translations, type Locale, type TranslationKey } from '../../translations'
 import { AppContext } from './useAppContext'
+import type { DBUserStripped } from '../../../../../shared-types/types'
+import axios from 'axios'
 
 interface Props {
   children: ReactNode
@@ -9,8 +11,43 @@ interface Props {
 export const AppProvider = ({ children }: Props) => {
   const [locale, setLocale] = useState<Locale>('en-US')
   const activeTranslations = translations[locale]
-  //   const [isInitializing, setIsInitializing] = useState(true);
-  //   const [initializationError, setInitializationError] = useState<unknown>();
+  const [user, setUser] = useState<DBUserStripped | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
+  const [initializationError, setInitializationError] = useState<unknown>()
+  const refreshPooling = useRef<ReturnType<typeof setInterval>>(undefined)
+
+  const activateRefresh = () => {
+    const refresh = async () => {
+      await axios.post('auth/refresh').catch(() => {
+        clearInterval(refreshPooling.current)
+        setUser(null)
+      })
+    }
+
+    refresh()
+    refreshPooling.current = setInterval(refresh, 600000) // 10 min
+  }
+
+  useEffect(() => {
+    const checkAuthAndStartRefresh = async () => {
+      if (refreshPooling.current) return
+
+      try {
+        const { status, data } = await axios.get('auth/check')
+        if (status !== 200) return
+
+        setUser(data)
+        activateRefresh()
+      } catch (error) {
+        setInitializationError(error)
+      } finally {
+        setIsInitializing(false)
+      }
+    }
+
+    checkAuthAndStartRefresh()
+    return () => clearInterval(refreshPooling.current)
+  }, [])
 
   const t = (key: TranslationKey) =>
     activeTranslations[key] ??
@@ -25,9 +62,11 @@ export const AppProvider = ({ children }: Props) => {
         t,
         locale,
         onLocaleChange: setLocale,
-        // isInitializing,
-        // initializationError,
-        // locale,
+        user,
+        onUserChange: setUser,
+        isInitializing,
+        initializationError,
+        activateRefresh,
       }}
     >
       {children}

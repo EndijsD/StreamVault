@@ -16,12 +16,15 @@ const fetch = async (form: LoginForm) => {
   return res.data
 }
 
-const Login = () => {
+const Register = () => {
   const { t, onUserChange, activateRefresh } = useAppContext()
   const nav = useNavigate()
   const [form, setForm] = useState<LoginForm>({
+    name: '',
+    surname: '',
     email: '',
     password: '',
+    confirmPassword: '',
   })
   const [errors, setErrors] = useState<Errors<LoginForm>>({})
   const toast = useToast()
@@ -56,7 +59,35 @@ const Login = () => {
   return (
     <S.Container>
       <S.StyledPaper elevation={2}>
-        <S.Title variant='h4'>{t('log_in')}</S.Title>
+        <S.Title variant='h4'>{t('sign_up')}</S.Title>
+
+        <TextField
+          required
+          variant='standard'
+          label={t('name')}
+          value={form.name}
+          onChange={(event) => {
+            setForm({ ...form, name: event.target.value })
+            setErrors({ ...errors, name: null })
+          }}
+          type='name'
+          error={!!errors.name}
+          helperText={errors.name && t(errors.name)}
+        />
+
+        <TextField
+          required
+          variant='standard'
+          label={t('surname')}
+          value={form.surname}
+          onChange={(event) => {
+            setForm({ ...form, surname: event.target.value })
+            setErrors({ ...errors, surname: null })
+          }}
+          type='surname'
+          error={!!errors.surname}
+          helperText={errors.surname && t(errors.surname)}
+        />
 
         <TextField
           required
@@ -86,21 +117,35 @@ const Login = () => {
           helperText={errors.password && t(errors.password)}
         />
 
+        <TextField
+          required
+          variant='standard'
+          label={t('confirm_password')}
+          value={form.confirmPassword}
+          onChange={(event) => {
+            setForm({ ...form, confirmPassword: event.target.value })
+            setErrors({ ...errors, confirmPassword: null })
+          }}
+          type='confirmPassword'
+          error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword && t(errors.confirmPassword)}
+        />
+
         <S.StyledButton variant='contained' onClick={handleSubmit} loading={isPending} loadingPosition='start'>
-          {t('log_in')}
+          {t('sign_up')}
         </S.StyledButton>
 
         <Typography variant='body2'>
-          {t('no_account_yet')}{' '}
+          {t('already_have_an_account')}{' '}
           <Link
-            href='/register'
+            href='/login'
             underline='hover'
             onClick={(e) => {
               e.preventDefault()
-              nav('/register')
+              nav('/login')
             }}
           >
-            {t('sign_up')}
+            {t('log_in')}
           </Link>
         </Typography>
       </S.StyledPaper>
@@ -108,4 +153,4 @@ const Login = () => {
   )
 }
 
-export default Login
+export default Register

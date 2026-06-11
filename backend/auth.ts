@@ -1,7 +1,7 @@
 import express, { type CookieOptions, type NextFunction, type Request, type Response } from 'express'
 import db from './db.ts'
 import bcrypt from 'bcrypt'
-import jwt, { JsonWebTokenError } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import type { RowDataPacket, ResultSetHeader } from 'mysql2'
 import { getErrorMessage } from './functions.ts'
 import type { User } from './types.ts'
@@ -20,7 +20,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
 
-    const [rows] = await db.query<RowDataPacket[]>(`SELECT * FROM users WHERE epasts = ?`, [email])
+    const [rows] = await db.query<RowDataPacket[]>(`SELECT * FROM users WHERE email = ?`, [email])
 
     if (rows.length < 1) return res.status(403).json({ message: 'Invalid credentials' })
     if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
@@ -40,11 +40,17 @@ router.post('/login', async (req, res) => {
     delete user.refresh_token
     delete user.password
 
-    const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET!)
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET
+    if (!refreshSecret) return res.sendStatus(500)
+
+    const refreshToken = jwt.sign(user, refreshSecret)
 
     await db.query<ResultSetHeader>(`UPDATE users SET refresh_token = ? WHERE id = ?`, [refreshToken, id])
 
-    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: '15m' })
+    const accessSecret = process.env.ACCESS_TOKEN_SECRET
+    if (!accessSecret) return res.sendStatus(500)
+
+    const accessToken = jwt.sign(user, accessSecret, { expiresIn: '15m' })
 
     res.cookie('refreshToken', refreshToken, cookieOptions)
 
@@ -62,7 +68,6 @@ router.post('/login', async (req, res) => {
 router.post('/refresh', async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken
-
     if (!refreshToken) return res.status(401).json({ message: 'No token' })
 
     const [rows] = await db.query<RowDataPacket[]>('SELECT refresh_token FROM users WHERE refresh_token = ?', [
@@ -76,15 +81,15 @@ router.post('/refresh', async (req, res) => {
       return res.status(403).json({ message: 'Invalid token' })
     }
 
-    const refresh_secret = process.env.REFRESH_TOKEN_SECRET
-    if (!refresh_secret) return res.sendStatus(500)
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET
+    if (!refreshSecret) return res.sendStatus(500)
 
-    const user = jwt.verify(refreshToken, refresh_secret) as User
+    const user = jwt.verify(refreshToken, refreshSecret) as User
 
-    const access_secret = process.env.ACCESS_TOKEN_SECRET
-    if (!access_secret) return res.sendStatus(500)
+    const accessSecret = process.env.ACCESS_TOKEN_SECRET
+    if (!accessSecret) return res.sendStatus(500)
 
-    const accessToken = jwt.sign(user, access_secret, { expiresIn: '15m' })
+    const accessToken = jwt.sign(user, accessSecret, { expiresIn: '15m' })
 
     res.cookie('accessToken', accessToken, {
       maxAge: 900000,
@@ -93,7 +98,9 @@ router.post('/refresh', async (req, res) => {
 
     res.sendStatus(200)
   } catch (err: unknown) {
-    if (err instanceof JsonWebTokenError) return res.status(403).json({ message: 'Invalid token' })
+    if (err instanceof jwt.JsonWebTokenError) {
+      return res.status(403).json({ message: 'Invalid token' })
+    }
 
     res.status(500).json({ message: getErrorMessage(err) })
   }
@@ -101,7 +108,7 @@ router.post('/refresh', async (req, res) => {
 
 router.post('/logout', async (req, res) => {
   try {
-    await db.query('UPDATE lietotajs SET refresh_token = NULL WHERE refresh_token = ?', [req.cookies.refreshToken])
+    await db.query('UPDATE users SET refresh_token = NULL WHERE refresh_token = ?', [req.cookies.refreshToken])
 
     res.clearCookie('refreshToken', cookieOptions)
     res.clearCookie('accessToken', cookieOptions)

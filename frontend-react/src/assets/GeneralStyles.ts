@@ -33,10 +33,20 @@ export const GeneralContainedButton = styled(Button)(({ theme }) => ({
   '&:hover': {
     backgroundPosition: '100% 50%',
     transform: 'translateY(-2px)',
+    boxShadow: `0 3px 5px 2px ${theme.palette.grey[300]}`,
   },
 
-  boxShadow: `0 3px 5px 2px ${theme.palette.grey[300]} !important`,
+  '&:active': {
+    boxShadow: `0 3px 5px 2px ${theme.palette.grey[300]}`,
+  },
+
+  boxShadow: `0 3px 5px 2px ${theme.palette.grey[300]}`,
   height: theme.spacing(6),
+
+  '&.Mui-disabled': {
+    background: 'none',
+    // boxShadow: 'none',
+  },
 }))
 
 // export const GeneralContainedButton = styled(Button)(({ theme }) => ({

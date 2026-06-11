@@ -7,7 +7,7 @@ import type { ResultSetHeader } from 'mysql2'
 
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateSession, async (req, res) => {
   try {
     const table = req.baseUrl.slice(1)
 

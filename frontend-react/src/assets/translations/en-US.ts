@@ -6,4 +6,11 @@ export default {
   page_not_found: 'Page not found',
   back_to_home: 'Back to home',
   field_required: 'This field is required',
-}
+  login_credentials_error: 'Invalid credentials',
+  something_went_wrong: 'Something went wrong',
+  name: 'Name',
+  surname: 'Surname',
+  confirm_password: 'Confirm password',
+  no_account_yet: "Don't have an account yet?",
+  already_have_an_account: 'Already have an account?',
+} satisfies Record<string, string>

@@ -1,4 +1,4 @@
-import { Box, styled } from '@mui/material';
+import { Box, styled } from '@mui/material'
 
 export const StyledBox = styled(Box)(({ theme }) => ({
   position: 'fixed',
@@ -8,10 +8,11 @@ export const StyledBox = styled(Box)(({ theme }) => ({
   height: 300,
   borderRadius: '100% 10% 0 0',
   zIndex: 1,
-}));
+}))
 
 export const OutletWrapper = styled('div')({
   position: 'relative',
   zIndex: 2,
+  display: 'flex',
   height: '100%',
-});
+})
