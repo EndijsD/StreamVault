@@ -15,4 +15,5 @@ export default {
   confirm_password: 'Apstipriniet paroli',
   no_account_yet: 'Vai jums vēl nav konta?',
   already_have_an_account: 'Vai jums jau ir konts?',
+  passwords_dont_match: 'Paroles nesakrīt',
 } satisfies Record<TranslationKey, string>

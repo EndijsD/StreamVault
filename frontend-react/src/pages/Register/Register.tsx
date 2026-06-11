@@ -1,7 +1,7 @@
 import { Link, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import * as S from './styles'
-import type { LoginForm } from './types'
+import type { RegisterForm } from './types'
 import type { Errors } from '../../assets/GeneralTypes'
 import { validateEmpty } from '../../assets/GeneralFunctions'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
@@ -11,22 +11,20 @@ import axios, { isAxiosError } from 'axios'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import type { DBUserStripped } from '../../../../shared-types/types'
 
-const fetch = async (form: LoginForm) => {
-  const res = await axios.post<DBUserStripped>('/auth/login', form)
+const fetch = async (form: RegisterForm) => {
+  const res = await axios.post<DBUserStripped>('/auth/register', form)
   return res.data
 }
 
 const Register = () => {
   const { t, onUserChange, activateRefresh } = useAppContext()
   const nav = useNavigate()
-  const [form, setForm] = useState<LoginForm>({
-    name: '',
-    surname: '',
+  const [form, setForm] = useState<RegisterForm>({
     email: '',
     password: '',
     confirmPassword: '',
   })
-  const [errors, setErrors] = useState<Errors<LoginForm>>({})
+  const [errors, setErrors] = useState<Errors<RegisterForm>>({})
   const toast = useToast()
 
   const { mutate, isPending } = useMutation({
@@ -46,7 +44,9 @@ const Register = () => {
   })
 
   const handleSubmit = () => {
-    const newErrors: Errors<LoginForm> = {
+    const newErrors: Errors<RegisterForm> = {
+      ...(form.password !== form.confirmPassword &&
+        ({ confirmPassword: 'passwords_dont_match' } satisfies Errors<RegisterForm>)),
       ...validateEmpty(form),
     }
 
@@ -60,34 +60,6 @@ const Register = () => {
     <S.Container>
       <S.StyledPaper elevation={2}>
         <S.Title variant='h4'>{t('sign_up')}</S.Title>
-
-        <TextField
-          required
-          variant='standard'
-          label={t('name')}
-          value={form.name}
-          onChange={(event) => {
-            setForm({ ...form, name: event.target.value })
-            setErrors({ ...errors, name: null })
-          }}
-          type='name'
-          error={!!errors.name}
-          helperText={errors.name && t(errors.name)}
-        />
-
-        <TextField
-          required
-          variant='standard'
-          label={t('surname')}
-          value={form.surname}
-          onChange={(event) => {
-            setForm({ ...form, surname: event.target.value })
-            setErrors({ ...errors, surname: null })
-          }}
-          type='surname'
-          error={!!errors.surname}
-          helperText={errors.surname && t(errors.surname)}
-        />
 
         <TextField
           required
@@ -126,7 +98,7 @@ const Register = () => {
             setForm({ ...form, confirmPassword: event.target.value })
             setErrors({ ...errors, confirmPassword: null })
           }}
-          type='confirmPassword'
+          type='password'
           error={!!errors.confirmPassword}
           helperText={errors.confirmPassword && t(errors.confirmPassword)}
         />

@@ -13,4 +13,5 @@ export default {
   confirm_password: 'Confirm password',
   no_account_yet: "Don't have an account yet?",
   already_have_an_account: 'Already have an account?',
+  passwords_dont_match: "Passwords don't match",
 } satisfies Record<string, string>

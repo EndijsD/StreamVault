@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import type { RowDataPacket, ResultSetHeader } from 'mysql2'
 import { getErrorMessage } from './functions.ts'
 import type { User } from './types.ts'
+import type { DBUserStripped } from '../shared-types/types.ts'
 
 const router = express.Router()
 
@@ -16,6 +17,52 @@ const cookieOptions: CookieOptions = {
   sameSite: isProduction ? 'none' : 'strict',
 }
 
+const createSession = async (user: DBUserStripped, res: Response) => {
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET
+  const accessSecret = process.env.ACCESS_TOKEN_SECRET
+
+  if (!refreshSecret || !accessSecret) {
+    throw new Error('JWT secrets missing')
+  }
+
+  const refreshToken = jwt.sign(user, refreshSecret)
+
+  await db.query('UPDATE users SET refresh_token = ? WHERE id = ?', [refreshToken, user.id])
+
+  const accessToken = jwt.sign(user, accessSecret, {
+    expiresIn: '15m',
+  })
+
+  res.cookie('refreshToken', refreshToken, cookieOptions)
+
+  res.cookie('accessToken', accessToken, {
+    maxAge: 900000,
+    ...cookieOptions,
+  })
+}
+
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    const hash = await bcrypt.hash(password, 10)
+
+    const [result] = await db.query<ResultSetHeader>(`INSERT INTO users (email, password) VALUES (?, ?)`, [email, hash])
+
+    const user: DBUserStripped = {
+      id: result.insertId,
+      name: null,
+      surname: null,
+      email,
+    }
+
+    await createSession(user, res)
+    return res.json(user)
+  } catch (err) {
+    res.status(500).json({ message: getErrorMessage(err) })
+  }
+})
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
@@ -26,13 +73,12 @@ router.post('/login', async (req, res) => {
     if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
 
     const user = { ...rows[0] }
-    const { password: hashPassword, id } = user
+    const { password: hashPassword } = user
 
     const isCorrectPass = bcrypt.compareSync(password, hashPassword)
 
     if (!isCorrectPass) return res.status(403).json({ message: 'Invalid credentials' })
 
-    // cleanup user object
     Object.keys(user).forEach((key) => {
       if (user[key] === null) delete user[key]
     })
@@ -40,26 +86,8 @@ router.post('/login', async (req, res) => {
     delete user.refresh_token
     delete user.password
 
-    const refreshSecret = process.env.REFRESH_TOKEN_SECRET
-    if (!refreshSecret) return res.sendStatus(500)
-
-    const refreshToken = jwt.sign(user, refreshSecret)
-
-    await db.query<ResultSetHeader>(`UPDATE users SET refresh_token = ? WHERE id = ?`, [refreshToken, id])
-
-    const accessSecret = process.env.ACCESS_TOKEN_SECRET
-    if (!accessSecret) return res.sendStatus(500)
-
-    const accessToken = jwt.sign(user, accessSecret, { expiresIn: '15m' })
-
-    res.cookie('refreshToken', refreshToken, cookieOptions)
-
-    res.cookie('accessToken', accessToken, {
-      maxAge: 900000,
-      ...cookieOptions,
-    })
-
-    return res.status(200).json(user)
+    await createSession(user as DBUserStripped, res)
+    return res.json(user)
   } catch (err) {
     res.status(500).json({ message: getErrorMessage(err) })
   }

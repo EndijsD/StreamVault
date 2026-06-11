@@ -1,6 +1,6 @@
 export interface DBUserStripped {
   id: number
-  name: string
-  surname: string
+  name: string | null
+  surname: string | null
   email: string
 }

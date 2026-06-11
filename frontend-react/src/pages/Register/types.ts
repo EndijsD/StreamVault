@@ -1,6 +1,4 @@
-export interface LoginForm {
-  name: string
-  surname: string
+export interface RegisterForm {
   email: string
   password: string
   confirmPassword: string
