@@ -14,4 +14,9 @@ export default {
   no_account_yet: "Don't have an account yet?",
   already_have_an_account: 'Already have an account?',
   passwords_dont_match: "Passwords don't match",
+  password_length: 'Must be at least 8 characters long',
+  password_uppercase: 'Must have at least one uppercase letter',
+  password_lowercase: 'Must have at least one lowercase letter',
+  password_numbers: 'Must have at least one number',
+  password_special: 'Must have at least one special character',
 } satisfies Record<string, string>

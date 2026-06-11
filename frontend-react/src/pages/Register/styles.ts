@@ -35,3 +35,7 @@ export const StyledButton = styled(GeneralContainedButton)(({ theme }) => ({
 export const StyledLink = styled(Link)({
   cursor: 'pointer',
 })
+
+// export const StyledListItemIcon = styled(ListItemIcon)<{ success: boolean }>(({ theme, success }) => ({
+//   color: success ? theme.palette.success.main : undefined,
+// }))

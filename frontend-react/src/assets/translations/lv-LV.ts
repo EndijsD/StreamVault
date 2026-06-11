@@ -16,4 +16,9 @@ export default {
   no_account_yet: 'Vai jums vēl nav konta?',
   already_have_an_account: 'Vai jums jau ir konts?',
   passwords_dont_match: 'Paroles nesakrīt',
+  password_length: 'Jābūt vismaz 8 rakstzīmes garai',
+  password_uppercase: 'Jāsatur vismaz viens lielais burts',
+  password_lowercase: 'Jāsatur vismaz viens mazais burts',
+  password_numbers: 'Jāsatur vismaz viens cipars',
+  password_special: 'Jāsatur vismaz viena speciālā rakstzīme',
 } satisfies Record<TranslationKey, string>
