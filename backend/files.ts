@@ -5,25 +5,17 @@ import fs from 'fs'
 import path from 'path'
 import { authenticateSession } from './auth.ts'
 import db from './db.ts'
-import type { ResultSetHeader } from 'mysql2'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
+import { ZipArchive } from 'archiver'
 
 const router = express.Router()
 
+//Root directory of the audio file storage
 const root = process.env.STORAGE_ROOT!
 
 const getUserDir = (userId: string) => path.join(root, userId)
 
 const getFilePath = (userId: string, fileId: string) => path.join(root, userId, fileId)
-
-const getMetaPath = (userId: string, fileId: string) => path.join(root, userId, fileId + '.meta.json')
-
-interface FileMeta {
-  userId: string
-  mimeType: string
-  originalName: string
-  size: number
-  uploadedAt: string
-}
 
 const ensureUserDir = async (userId: string) => {
   await fsPromises.mkdir(getUserDir(userId), { recursive: true })
@@ -32,13 +24,12 @@ const ensureUserDir = async (userId: string) => {
 //Temporary file storage directory where files are kept until placed into a valid directory
 const upload = multer({ dest: 'tmp' })
 
-router.post('', upload.array('files'), async (req, res) => {
+router.post('', authenticateSession, upload.array('files'), async (req, res) => {
   if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
     return res.status(400).json({ message: 'Files were not provided' })
   }
 
-  // const userId = req.user.id
-  const userId = 1
+  const userId = req.user.id
   const files = req.files as Express.Multer.File[]
 
   const records = files.map((file) => ({
@@ -49,7 +40,7 @@ router.post('', upload.array('files'), async (req, res) => {
 
   let insertedIds: number[]
 
-  // 1. Grab a connection from the pool for the transaction
+  //Grab a connection from the pool for the transaction
   const conn = await db.getConnection()
 
   try {
@@ -73,11 +64,10 @@ router.post('', upload.array('files'), async (req, res) => {
     await Promise.allSettled(records.map((r) => fsPromises.unlink(r.tempPath)))
     return res.status(500).json({ message: 'Failed to save file metadata' })
   } finally {
-    // Always release back to the pool regardless of outcome
     conn.release()
   }
 
-  // 2. Move files — same as before
+  //Move files to valid directory (storage_root/userId/songId)
   await ensureUserDir(userId.toString())
 
   const settled = await Promise.allSettled(
@@ -116,71 +106,156 @@ router.post('', upload.array('files'), async (req, res) => {
   })
 })
 
-router.get('/files/:fileId', authenticateSession, async (req, res) => {
-  const fileId = req.params.fileId
-  if (Array.isArray(fileId)) return res.status(400).json({ message: 'fileId must be a string' })
+router.get('/download', authenticateSession, async (req, res) => {
+  const userId = req.user.id
+  const raw = req.query.songIds
 
-  const userId = req.user.id.toString()
+  if (!raw) return res.status(400).json({ message: 'songIds query param is required' })
 
-  const filePath = getFilePath(userId, fileId)
-  const metaPath = getMetaPath(userId, fileId)
+  const songIds = (Array.isArray(raw) ? raw : (raw as string).split(','))
+    .map((id) => parseInt(id as string, 10))
+    .filter((id) => !isNaN(id))
+
+  if (songIds.length === 0) return res.status(400).json({ message: 'No valid song IDs provided' })
 
   try {
-    const [stat, metaRaw] = await Promise.all([fsPromises.stat(filePath), fsPromises.readFile(metaPath, 'utf-8')])
+    const placeholders = songIds.map(() => '?').join(', ')
+    const [rows] = await db.query<RowDataPacket[]>(
+      `SELECT id, original_file_name FROM songs WHERE id IN (${placeholders}) AND users_id = ?`,
+      [...songIds, userId],
+    )
 
-    const meta: FileMeta = JSON.parse(metaRaw)
+    if (rows.length === 0) return res.sendStatus(404)
 
-    if (meta.userId !== userId) return res.sendStatus(403)
+    res.setHeader('Content-Type', 'application/zip')
+    res.setHeader('Content-Disposition', 'attachment; filename="songs.zip"')
 
+    const archive = new ZipArchive({ zlib: { level: 6 } })
+
+    archive.on('error', (err) => {
+      res.destroy(err)
+    })
+
+    archive.pipe(res)
+
+    for (const row of rows) {
+      const filePath = getFilePath(userId.toString(), row.id.toString())
+      archive.file(filePath, { name: row.original_file_name })
+    }
+
+    await archive.finalize()
+  } catch {
+    res.sendStatus(500)
+  }
+})
+
+// Get a section of adio
+router.get('/:songId', async (req, res) => {
+  const songId = req.params.songId
+  if (Array.isArray(songId))
+    return res.status(400).json({
+      message: 'Multiple ids for streaming are not allowed',
+    })
+
+  // const userId = req.user.id
+  const userId = 2
+  try {
+    const [rows] = await db.query<RowDataPacket[]>(`SELECT mime_type FROM songs WHERE id = ? AND users_id = ?`, [
+      songId,
+      userId,
+    ])
+
+    if (rows.length === 0) return res.sendStatus(404)
+
+    const { mime_type } = rows[0]
+    const filePath = getFilePath(userId.toString(), songId)
+    const stat = await fsPromises.stat(filePath)
     const range = req.headers.range
+    console.log('range', range)
 
     if (!range) {
       res.writeHead(200, {
-        'Content-Type': meta.mimeType,
+        'Content-Type': mime_type,
         'Content-Length': stat.size,
         'Accept-Ranges': 'bytes',
       })
       return fs.createReadStream(filePath).pipe(res)
     }
 
+    const HEADER_SIZE = 128 * 1024 // 128kb covers most ID3/codec headers
+
     const parts = range.replace('bytes=', '').split('-')
     const start = parseInt(parts[0], 10)
     const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1
 
-    if (start >= stat.size) {
-      return res.status(416).setHeader('Content-Range', `bytes */${stat.size}`).end()
+    // If seeking past the header, prepend it
+    if (start > HEADER_SIZE) {
+      const headerStream = fs.createReadStream(filePath, { start: 0, end: HEADER_SIZE - 1 })
+      const bodyStream = fs.createReadStream(filePath, { start, end })
+
+      res.writeHead(206, {
+        'Content-Type': mime_type,
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': end - start + 1 + HEADER_SIZE,
+      })
+
+      headerStream.pipe(res, { end: false })
+      headerStream.on('end', () => bodyStream.pipe(res))
+    } else {
+      res.writeHead(206, {
+        'Content-Type': mime_type,
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': end - start + 1,
+      })
+      fs.createReadStream(filePath, { start, end }).pipe(res)
     }
-
-    res.writeHead(206, {
-      'Content-Type': meta.mimeType,
-      'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': end - start + 1,
-    })
-
-    fs.createReadStream(filePath, { start, end }).pipe(res)
   } catch {
     res.sendStatus(404)
   }
 })
 
-router.delete('/files/:fileId', authenticateSession, async (req, res) => {
-  const fileId = req.params.fileId
-  if (Array.isArray(fileId)) return res.status(400).json({ message: 'fileId must be a string' })
+router.delete('', authenticateSession, async (req, res) => {
+  const userId = req.user.id
+  const songIds = req.body?.songIds
 
-  const userId = req.user.id.toString()
+  console.log('body', req.body)
+
+  if (!songIds || !Array.isArray(songIds) || songIds.length === 0) {
+    return res.status(400).json({ message: 'songIds must be a non-empty array' })
+  }
+
+  const conn = await db.getConnection()
 
   try {
-    const metaRaw = await fsPromises.readFile(getMetaPath(userId, fileId), 'utf-8')
-    const meta: FileMeta = JSON.parse(metaRaw)
+    await conn.beginTransaction()
 
-    if (meta.userId !== userId) return res.sendStatus(403)
+    // Delete rows that belong to this user and are requested to be deleted
+    const placeholders = songIds.map(() => '?').join(', ')
+    const [result] = await conn.query<ResultSetHeader>(
+      `DELETE FROM songs WHERE id IN (${placeholders}) AND users_id = ?`,
+      [...songIds, userId],
+    )
 
-    await Promise.all([fsPromises.unlink(getFilePath(userId, fileId)), fsPromises.unlink(getMetaPath(userId, fileId))])
+    await conn.commit()
 
-    res.sendStatus(204)
+    // Remove files for confirmed deleted IDs
+    const deleteResults = await Promise.allSettled(
+      songIds.map((songId) => fsPromises.unlink(getFilePath(userId.toString(), songId.toString()))),
+    )
+
+    const failed = deleteResults.filter((r) => r.status === 'rejected').length
+
+    res.status(200).json({
+      deleted: result.affectedRows,
+      ...(failed > 0 && { warning: `${failed} file(s) could not be removed from disk` }),
+    })
   } catch {
-    res.sendStatus(404)
+    await conn.rollback()
+    res.sendStatus(500)
+  } finally {
+    conn.release()
   }
 })
 
