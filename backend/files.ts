@@ -1,11 +1,11 @@
 import express from 'express'
 import multer from 'multer'
 import fsPromises from 'fs/promises'
-import { randomUUID } from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import { authenticateSession } from './auth.ts'
-// import db from './db.ts'
+import db from './db.ts'
+import type { ResultSetHeader } from 'mysql2'
 
 const router = express.Router()
 
@@ -32,48 +32,88 @@ const ensureUserDir = async (userId: string) => {
 //Temporary file storage directory where files are kept until placed into a valid directory
 const upload = multer({ dest: 'tmp' })
 
-router.post('/files', upload.array('files'), authenticateSession, async (req, res) => {
-  if (!req.file) return res.status(400).json({ message: 'File was not provided' })
+router.post('', upload.array('files'), async (req, res) => {
+  if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+    return res.status(400).json({ message: 'Files were not provided' })
+  }
 
-  // db.query(
-  //   `SELECT uzdevumi.*
-  //   FROM uzdevumi INNER JOIN moduli_uzdevumi
-  //   ON moduli_uzdevumi.uzdevumi_id = uzdevumi.uzdevumi_id
-  //   WHERE moduli_uzdevumi.moduli_id = ?`,
-  //   id,
-  //   (err, result) => {
-  //     if (err) {
-  //       res.status(500).json({ message: err.message })
-  //     } else {
-  //       res.send(result)
-  //     }
-  //   },
-  // )
+  // const userId = req.user.id
+  const userId = 1
+  const files = req.files as Express.Multer.File[]
 
-  const userId = req.user.id.toString()
-  const fileId = randomUUID()
-  await ensureUserDir(userId)
+  const records = files.map((file) => ({
+    tempPath: file.path,
+    originalName: file.originalname,
+    mimeType: file.mimetype,
+  }))
 
-  const destination = getFilePath(userId, fileId)
+  let insertedIds: number[]
+
+  // 1. Grab a connection from the pool for the transaction
+  const conn = await db.getConnection()
 
   try {
-    await fsPromises.rename(req.file.path, destination)
-  } catch {
-    await fsPromises.copyFile(req.file.path, destination)
-    await fsPromises.unlink(req.file.path)
+    await conn.beginTransaction()
+
+    const results = await Promise.all(
+      records.map((r) =>
+        conn.query<ResultSetHeader>(
+          `INSERT INTO songs (original_file_name, mime_type, image_base64, image_mime_type, upload_date, users_id)
+           VALUES (?, ?, NULL, NULL, NOW(), ?)`,
+          [r.originalName, r.mimeType, userId],
+        ),
+      ),
+    )
+
+    insertedIds = results.map(([result]) => result.insertId)
+
+    await conn.commit()
+  } catch (error) {
+    await conn.rollback()
+    await Promise.allSettled(records.map((r) => fsPromises.unlink(r.tempPath)))
+    return res.status(500).json({ message: 'Failed to save file metadata' })
+  } finally {
+    // Always release back to the pool regardless of outcome
+    conn.release()
   }
 
-  const meta: FileMeta = {
-    userId,
-    mimeType: req.file.mimetype,
-    originalName: req.file.originalname,
-    size: req.file.size,
-    uploadedAt: new Date().toISOString(),
-  }
+  // 2. Move files — same as before
+  await ensureUserDir(userId.toString())
 
-  await fsPromises.writeFile(getMetaPath(userId, fileId), JSON.stringify(meta))
+  const settled = await Promise.allSettled(
+    records.map(async (r, i) => {
+      const songId = insertedIds[i]
+      const destination = getFilePath(userId.toString(), songId.toString())
 
-  res.status(201).json({ fileId, ...meta })
+      try {
+        await fsPromises.rename(r.tempPath, destination)
+      } catch {
+        await fsPromises.copyFile(r.tempPath, destination)
+        await fsPromises.unlink(r.tempPath)
+      }
+
+      return {
+        songId,
+        originalName: r.originalName,
+        mimeType: r.mimeType,
+        userId,
+      }
+    }),
+  )
+
+  const uploaded = settled
+    .filter(
+      (r): r is PromiseFulfilledResult<{ songId: number; originalName: string; mimeType: string; userId: number }> =>
+        r.status === 'fulfilled',
+    )
+    .map((r) => r.value)
+
+  const failed = settled.filter((r) => r.status === 'rejected').length
+
+  res.status(201).json({
+    uploaded,
+    ...(failed > 0 && { warning: `${failed} file(s) failed to move after DB insert` }),
+  })
 })
 
 router.get('/files/:fileId', authenticateSession, async (req, res) => {
