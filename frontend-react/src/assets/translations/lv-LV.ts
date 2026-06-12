@@ -22,4 +22,9 @@ export default {
   upload_date: 'Augšupielādes datums',
   list: 'Saraksts',
   compact: 'Saspiests',
+  password_length: 'Jābūt vismaz 8 rakstzīmes garai',
+  password_uppercase: 'Jāsatur vismaz viens lielais burts',
+  password_lowercase: 'Jāsatur vismaz viens mazais burts',
+  password_numbers: 'Jāsatur vismaz viens cipars',
+  password_special: 'Jāsatur vismaz viena speciālā rakstzīme',
 } satisfies Record<TranslationKey, string>

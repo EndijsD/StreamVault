@@ -1,4 +1,4 @@
-import { Link, TextField, Typography } from '@mui/material'
+import { IconButton, InputAdornment, Link, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
 import * as S from './styles'
 import type { LoginForm } from './types'
@@ -10,6 +10,7 @@ import { useMutation } from '@tanstack/react-query'
 import axios, { isAxiosError } from 'axios'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import type { DBUserStripped } from '../../../../shared-types/types'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
 
 const fetch = async (form: LoginForm) => {
   const res = await axios.post<DBUserStripped>('/auth/login', form)
@@ -25,6 +26,7 @@ const Login = () => {
   })
   const [errors, setErrors] = useState<Errors<LoginForm>>({})
   const toast = useToast()
+  const [showPassword, setShowPassword] = useState(false)
 
   const { mutate, isPending } = useMutation({
     mutationFn: fetch,
@@ -81,9 +83,20 @@ const Login = () => {
             setForm({ ...form, password: event.target.value })
             setErrors({ ...errors, password: null })
           }}
-          type='password'
+          type={showPassword ? 'text' : 'password'}
           error={!!errors.password}
           helperText={errors.password && t(errors.password)}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position='end'>
+                  <IconButton onClick={() => setShowPassword((prev) => !prev)} edge='end'>
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
         />
 
         <S.StyledButton variant='contained' onClick={handleSubmit} loading={isPending} loadingPosition='start'>

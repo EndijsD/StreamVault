@@ -16,15 +16,14 @@ export const AppProvider = ({ children }: Props) => {
   const [initializationError, setInitializationError] = useState<unknown>()
   const refreshPooling = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  const activateRefresh = () => {
-    const refresh = async () => {
-      await axios.post('auth/refresh').catch(() => {
-        clearInterval(refreshPooling.current)
-        setUser(null)
-      })
-    }
+  const refresh = async () => {
+    await axios.post('auth/refresh').catch(() => {
+      clearInterval(refreshPooling.current)
+      setUser(null)
+    })
+  }
 
-    refresh()
+  const activateRefresh = () => {
     refreshPooling.current = setInterval(refresh, 600000) // 10 min
   }
 
@@ -37,6 +36,7 @@ export const AppProvider = ({ children }: Props) => {
         if (status !== 200) return
 
         setUser(data)
+        refresh()
         activateRefresh()
       } catch (error) {
         setInitializationError(error)
