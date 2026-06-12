@@ -14,4 +14,10 @@ export default {
   no_account_yet: "Don't have an account yet?",
   already_have_an_account: 'Already have an account?',
   passwords_dont_match: "Passwords don't match",
+  title: 'Title',
+  artist: 'Artist',
+  album: 'Album',
+  upload_date: 'Upload date',
+  list: 'List',
+  compact: 'Compact',
 } satisfies Record<string, string>

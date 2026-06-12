@@ -7,6 +7,8 @@ import { authenticateSession } from './auth.ts'
 import db from './db.ts'
 import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 import { ZipArchive } from 'archiver'
+import { parseFile } from 'music-metadata'
+import type { DBSong } from '../shared-types/types.ts'
 
 const router = express.Router()
 
@@ -22,7 +24,9 @@ const ensureUserDir = async (userId: string) => {
 }
 
 //Temporary file storage directory where files are kept until placed into a valid directory
-const upload = multer({ dest: 'tmp' })
+const upload = multer({
+  dest: 'tmp',
+})
 
 router.post('', authenticateSession, upload.array('files'), async (req, res) => {
   if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
@@ -32,28 +36,55 @@ router.post('', authenticateSession, upload.array('files'), async (req, res) => 
   const userId = req.user.id
   const files = req.files as Express.Multer.File[]
 
-  const records = files.map((file) => ({
-    tempPath: file.path,
-    originalName: file.originalname,
-    mimeType: file.mimetype,
-  }))
+  const records = await Promise.all(
+    files.map(async (file) => {
+      const metadata = await parseFile(file.path)
+      const { title, album, artist, picture } = metadata.common
+
+      let image = null
+      if (picture) {
+        const cover = picture?.[0]
+        const imageBase64 = cover ? Buffer.from(cover.data).toString('base64') : null
+        image = `data:${picture[0].format};base64,${imageBase64}`
+      }
+
+      return {
+        tempPath: file.path,
+        image_base64: image,
+        title,
+        album,
+        artist,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        duration_s: metadata.format.duration,
+      }
+    }),
+  )
 
   let insertedIds: number[]
 
-  //Grab a connection from the pool for the transaction
   const conn = await db.getConnection()
 
   try {
     await conn.beginTransaction()
 
     const results = await Promise.all(
-      records.map((r) =>
-        conn.query<ResultSetHeader>(
-          `INSERT INTO songs (original_file_name, mime_type, image_base64, image_mime_type, upload_date, users_id)
-           VALUES (?, ?, NULL, NULL, NOW(), ?)`,
-          [r.originalName, r.mimeType, userId],
-        ),
-      ),
+      records.map((r) => {
+        return conn.query<ResultSetHeader>(
+          `INSERT INTO songs (original_file_name, title, album, artist, mime_type, image_base64, upload_date, users_id, duration_s)
+          VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?)`,
+          [
+            r.originalName,
+            r.title ?? r.originalName,
+            r.album,
+            r.artist,
+            r.mimeType,
+            r.image_base64,
+            userId,
+            r.duration_s,
+          ],
+        )
+      }),
     )
 
     insertedIds = results.map(([result]) => result.insertId)
@@ -112,6 +143,8 @@ router.get('/download', authenticateSession, async (req, res) => {
 
   if (!raw) return res.status(400).json({ message: 'songIds query param is required' })
 
+  const conn = await db.getConnection()
+
   const songIds = (Array.isArray(raw) ? raw : (raw as string).split(','))
     .map((id) => parseInt(id as string, 10))
     .filter((id) => !isNaN(id))
@@ -120,7 +153,7 @@ router.get('/download', authenticateSession, async (req, res) => {
 
   try {
     const placeholders = songIds.map(() => '?').join(', ')
-    const [rows] = await db.query<RowDataPacket[]>(
+    const [rows] = await conn.query<RowDataPacket[]>(
       `SELECT id, original_file_name FROM songs WHERE id IN (${placeholders}) AND users_id = ?`,
       [...songIds, userId],
     )
@@ -146,21 +179,42 @@ router.get('/download', authenticateSession, async (req, res) => {
     await archive.finalize()
   } catch {
     res.sendStatus(500)
+  } finally {
+    conn.release()
   }
 })
 
-// Get a section of adio
-router.get('/:songId', async (req, res) => {
+type DBSongReturn = RowDataPacket & DBSong
+
+router.get('', authenticateSession, async (req, res) => {
+  const userId = req.user.id
+  const conn = await db.getConnection()
+
+  try {
+    const [result] = await conn.query<DBSongReturn[]>(`SELECT * FROM songs WHERE users_id = ?`, [userId])
+    const updated = result.map((el) => ({ ...el, image_base64: el.image_base64?.toString() ?? null }))
+
+    res.send(updated)
+  } catch {
+    res.sendStatus(404)
+  } finally {
+    conn.release()
+  }
+})
+
+// Get a section of audio
+router.get('/:songId', authenticateSession, async (req, res) => {
   const songId = req.params.songId
   if (Array.isArray(songId))
     return res.status(400).json({
       message: 'Multiple ids for streaming are not allowed',
     })
 
-  // const userId = req.user.id
-  const userId = 2
+  const conn = await db.getConnection()
+
+  const userId = req.user.id
   try {
-    const [rows] = await db.query<RowDataPacket[]>(`SELECT mime_type FROM songs WHERE id = ? AND users_id = ?`, [
+    const [rows] = await conn.query<RowDataPacket[]>(`SELECT mime_type FROM songs WHERE id = ? AND users_id = ?`, [
       songId,
       userId,
     ])
@@ -171,7 +225,6 @@ router.get('/:songId', async (req, res) => {
     const filePath = getFilePath(userId.toString(), songId)
     const stat = await fsPromises.stat(filePath)
     const range = req.headers.range
-    console.log('range', range)
 
     if (!range) {
       res.writeHead(200, {
@@ -213,14 +266,14 @@ router.get('/:songId', async (req, res) => {
     }
   } catch {
     res.sendStatus(404)
+  } finally {
+    conn.release()
   }
 })
 
 router.delete('', authenticateSession, async (req, res) => {
   const userId = req.user.id
   const songIds = req.body?.songIds
-
-  console.log('body', req.body)
 
   if (!songIds || !Array.isArray(songIds) || songIds.length === 0) {
     return res.status(400).json({ message: 'songIds must be a non-empty array' })

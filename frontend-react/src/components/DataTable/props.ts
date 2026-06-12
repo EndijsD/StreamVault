@@ -1,0 +1,37 @@
+import type { SxProps } from '@mui/material'
+import type { TranslationKey } from '../../assets/translations'
+import type { Theme } from '@mui/material/styles'
+import type { Dispatch, SetStateAction } from 'react'
+
+export type OrderDir = 'asc' | 'desc' | null
+export type DisplayType = 'list' | 'compact'
+export type RowStyleFn<T> = (row: T) => SxProps<Theme> | undefined
+export type Order<T> = { orderDir: OrderDir; orderBy: keyof T | null }
+
+export interface ColumnDef<T> {
+  id: keyof T
+  label: TranslationKey
+  numeric?: boolean
+  disablePadding?: boolean
+  render?: (value: T[keyof T], row: T) => React.ReactNode
+}
+
+export interface DataTableProps<T extends { id: number | string }> {
+  rows: T[]
+  columns: ColumnDef<T>[]
+
+  orderState: Order<T>
+  setOrderState: Dispatch<SetStateAction<Order<T>>>
+}
+
+export interface ToolbarProps {
+  displayType: DisplayType
+  setDisplayType: (displayType: DisplayType) => void
+}
+
+export interface TableHeadProps<T> {
+  columns: ColumnDef<T>[]
+  orderState: Order<T>
+  onRequestSort: (event: React.MouseEvent<unknown>, property: keyof T) => void
+  dense: Boolean
+}

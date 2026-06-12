@@ -16,4 +16,10 @@ export default {
   no_account_yet: 'Vai jums vēl nav konta?',
   already_have_an_account: 'Vai jums jau ir konts?',
   passwords_dont_match: 'Paroles nesakrīt',
+  title: 'Nosaukums',
+  artist: 'Mākslinieks',
+  album: 'Albums',
+  upload_date: 'Augšupielādes datums',
+  list: 'Saraksts',
+  compact: 'Saspiests',
 } satisfies Record<TranslationKey, string>
