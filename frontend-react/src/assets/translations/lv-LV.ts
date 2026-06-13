@@ -59,4 +59,12 @@ export default {
   confirm_email: 'Apstiprināt e-pasta adresi',
   emails_dont_match: 'E-pasta adreses nesakrīt',
   email_description: 'Šeit varat atjaunināt savu e-pasta adresi.',
+  password_description: 'Šeit varat atjaunināt savu paroli.',
+  password_update_success: 'Parole veiksmīgi atjaunināta',
+  password_update_error: 'Neizdevās atjaunināt paroli',
+  new_password: 'Jaunā parole',
+  confirm_new_password: 'Apstipriniet jauno paroli',
+  current_password: 'Pašreizējā parole',
+  continue: 'Turpināt',
+  enter_password_to_delete: 'Ievadiet savu paroli, lai dzēstu kontu.',
 } satisfies Record<TranslationKey, string>

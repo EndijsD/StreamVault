@@ -3,6 +3,7 @@ export interface DBUserStripped {
   name: string | null
   surname: string | null
   email: string
+  locale: string
 }
 
 export interface DBSong {

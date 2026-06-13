@@ -1,4 +1,4 @@
-import { Button, Divider, MenuItem, Typography, useColorScheme } from '@mui/material'
+import { Divider, MenuItem, Typography, useColorScheme } from '@mui/material'
 import * as S from './styles'
 import type { Locale, TranslationKey } from '../../assets/translations'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
@@ -7,6 +7,8 @@ import axios from 'axios'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import InformationDialog from '../../features/settings/InformationDialog'
 import EmailDialog from '../../features/settings/EmailDialog'
+import PasswordDialog from '../../features/settings/PasswordDialog'
+import DeleteDialog from '../../features/settings/DeleteDialog'
 
 const languages: { value: Locale; label: TranslationKey }[] = [
   { value: 'en-US', label: 'english' },
@@ -27,7 +29,7 @@ const Settings = () => {
   const toast = useToast()
 
   const { mutate: mutateLanguage } = useMutation({
-    mutationFn: (locale: Locale) => axios.patch('users', { id: user?.id, locale }),
+    mutationFn: (locale: Locale) => axios.patch('users', [{ id: user?.id, locale }]),
     onSuccess: () => {
       toast({ message: 'language_update_success' })
     },
@@ -80,13 +82,8 @@ const Settings = () => {
         <Divider />
 
         <InformationDialog />
-
         <EmailDialog />
-
-        <S.FormField>
-          <Typography>{t('password')}</Typography>
-          <Button variant='outlined'>{t('change')}</Button>
-        </S.FormField>
+        <PasswordDialog />
       </S.StyledPaper>
 
       <S.StyledPaperRed variant='outlined'>
@@ -96,12 +93,7 @@ const Settings = () => {
 
         <Divider />
 
-        <S.FormField>
-          <Typography>{t('delete_account')}</Typography>
-          <Button variant='outlined' color='error'>
-            {t('delete')}
-          </Button>
-        </S.FormField>
+        <DeleteDialog />
       </S.StyledPaperRed>
     </S.Container>
   )

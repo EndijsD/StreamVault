@@ -11,6 +11,7 @@ import axios, { isAxiosError } from 'axios'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import type { DBUserStripped } from '../../../../shared-types/types'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
+import type { Locale } from '../../assets/translations'
 
 const fetch = async (form: LoginForm) => {
   const res = await axios.post<DBUserStripped>('/auth/login', form)
@@ -18,7 +19,7 @@ const fetch = async (form: LoginForm) => {
 }
 
 const Login = () => {
-  const { t, onUserChange, activateRefresh } = useAppContext()
+  const { t, onUserChange, activateRefresh, onLocaleChange } = useAppContext()
   const nav = useNavigate()
   const [form, setForm] = useState<LoginForm>({
     email: '',
@@ -32,6 +33,7 @@ const Login = () => {
     mutationFn: fetch,
     onSuccess: (data) => {
       onUserChange(data)
+      onLocaleChange(data.locale as Locale)
       activateRefresh()
       nav('/library')
     },

@@ -36,6 +36,7 @@ export const AppProvider = ({ children }: Props) => {
         if (status !== 200) return
 
         setUser(data)
+        setLocale(data.locale)
         refresh()
         activateRefresh()
       } catch (error) {

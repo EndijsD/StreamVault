@@ -57,4 +57,12 @@ export default {
   confirm_email: 'Confirm email',
   emails_dont_match: "Emails don't match",
   email_description: 'Here you can update your email address.',
+  password_description: 'Here you can update your password.',
+  password_update_success: 'Password updated successfully',
+  password_update_error: 'Failed to update password',
+  new_password: 'New password',
+  confirm_new_password: 'Confirm new password',
+  current_password: 'Current password',
+  continue: 'Continue',
+  enter_password_to_delete: 'Enter your password to delete your account.',
 } satisfies Record<string, string>

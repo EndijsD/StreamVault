@@ -54,6 +54,7 @@ router.post('/register', async (req, res) => {
       name: null,
       surname: null,
       email,
+      locale: 'en-US',
     }
 
     await createSession(user, res)
@@ -147,7 +148,7 @@ router.post('/logout', async (req, res) => {
   }
 })
 
-router.get('/check', (req, res) => {
+router.get('/check', async (req, res) => {
   const accessToken = req.cookies.accessToken
   if (!accessToken) return res.sendStatus(401)
 
@@ -157,7 +158,22 @@ router.get('/check', (req, res) => {
   try {
     const user = jwt.verify(accessToken, secret) as User
 
-    return res.status(200).json(user)
+    const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM users WHERE id = ?', [user.id])
+
+    if (rows.length < 1) return res.status(403).json({ message: 'Invalid token' })
+    if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
+
+    const dbUser = rows[0] as unknown as User
+
+    const updatedUser: DBUserStripped = {
+      email: dbUser.email,
+      id: dbUser.id,
+      name: dbUser.name,
+      surname: dbUser.surname,
+      locale: dbUser.locale,
+    }
+
+    return res.status(200).json(updatedUser)
   } catch {
     return res.status(403).json({ message: 'Invalid token' })
   }

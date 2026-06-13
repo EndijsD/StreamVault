@@ -54,7 +54,6 @@ const InformationDialog = () => {
           <S.StyledTextField
             size='small'
             label={t('name')}
-            variant='outlined'
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
@@ -64,7 +63,6 @@ const InformationDialog = () => {
           <S.StyledTextField
             size='small'
             label={t('surname')}
-            variant='outlined'
             value={form.surname}
             onChange={(e) => setForm({ ...form, surname: e.target.value })}
           />
