@@ -1,5 +1,4 @@
-import { Box, Link, Paper, styled, Typography } from '@mui/material'
-import { GeneralContainedButton } from '../../assets/GeneralStyles'
+import { Box, Button, Link, Paper, styled, Typography } from '@mui/material'
 
 export const Container = styled(Box)({
   display: 'flex',
@@ -28,7 +27,7 @@ export const Title = styled(Typography)(({ theme }) => ({
   textShadow: `0px 0px 1px ${theme.palette.grey[900]}`,
 }))
 
-export const StyledButton = styled(GeneralContainedButton)(({ theme }) => ({
+export const StyledButton = styled(Button)(({ theme }) => ({
   marginTop: theme.spacing(1),
 }))
 

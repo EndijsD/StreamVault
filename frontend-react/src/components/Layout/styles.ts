@@ -14,5 +14,7 @@ export const OutletWrapper = styled('div')({
   position: 'relative',
   zIndex: 2,
   display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
   height: '100%',
 })

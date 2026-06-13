@@ -3,7 +3,7 @@ import * as S from './styles'
 import { useNavigate } from 'react-router'
 
 const NotFound = () => {
-  const { t } = useAppContext()
+  const { t, user } = useAppContext()
   const nav = useNavigate()
 
   return (
@@ -11,7 +11,7 @@ const NotFound = () => {
       <S.StyledPaper>
         <S.StyledWarning />
         <S.Title variant='h4'>{t('page_not_found')}</S.Title>
-        <S.StyledLink onClick={() => nav('/')}>{t('back_to_home')}</S.StyledLink>
+        <S.StyledLink onClick={() => (user ? nav('/library') : nav('/'))}>{t('back_to_home')}</S.StyledLink>
       </S.StyledPaper>
     </S.Content>
   )

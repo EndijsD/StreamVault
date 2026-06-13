@@ -5,7 +5,7 @@ import type { AlertColor, AlertPropsColorOverrides } from '@mui/material'
 
 export interface ToastOptions {
   message: TranslationKey
-  severity: OverridableStringUnion<AlertColor, AlertPropsColorOverrides>
+  severity?: OverridableStringUnion<AlertColor, AlertPropsColorOverrides>
 }
 
 export const ToastContext = createContext<((options: ToastOptions) => void) | null>(null)

@@ -33,7 +33,7 @@ export const ToastProvider = ({ children }: Props) => {
         onClose={(_, reason) => reason !== 'clickaway' && handleClose()}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleClose} severity='error'>
+        <Alert onClose={handleClose} severity={toastState?.severity}>
           {toastState?.message && t(toastState.message)}
         </Alert>
       </Snackbar>
