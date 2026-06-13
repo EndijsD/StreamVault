@@ -22,11 +22,13 @@ const theme = createTheme({
           main: '#7A8CFF',
           light: '#A3B1FF',
           dark: '#4E63D9',
+          contrastText: '#fff',
         },
         secondary: {
           main: '#FF7FA8',
           light: '#FFA6C2',
           dark: '#D95C86',
+          contrastText: '#fff',
         },
       },
     },
@@ -38,6 +40,28 @@ const theme = createTheme({
   },
 
   components: {
+    MuiCssBaseline: {
+      styleOverrides: (theme) => ({
+        '::-webkit-scrollbar': {
+          width: theme.spacing(2),
+        },
+
+        '::-webkit-scrollbar-track': {
+          background: theme.palette.grey[200],
+          borderRadius: theme.shape.borderRadius,
+        },
+
+        '::-webkit-scrollbar-thumb': {
+          background: theme.palette.grey[400],
+          borderRadius: theme.spacing(1),
+          border: `${theme.spacing(0.5)} solid ${theme.palette.grey[200]}`,
+        },
+
+        '::-webkit-scrollbar-thumb:hover': {
+          background: theme.palette.grey[500],
+        },
+      }),
+    },
     MuiButton: {
       defaultProps: {
         disableElevation: true,

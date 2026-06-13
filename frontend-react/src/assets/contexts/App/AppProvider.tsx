@@ -47,6 +47,7 @@ export const AppProvider = ({ children }: Props) => {
     }
 
     checkAuthAndStartRefresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const t = (key: TranslationKey) =>
