@@ -5,11 +5,13 @@ import * as S from './style'
 import AudioFiles from './TabPages/AudioFiles'
 import RadioStations from './TabPages/RadioStations'
 import Libraries from './TabPages/Libraries'
+import { useAppContext } from '../../assets/contexts/App/useAppContext'
+import UploadFiles from '../../components/UploadFiles'
 
 const LibraryTabs: TabItem[] = [
-  { label: 'Your Library', value: 'library' },
-  { label: 'Radio stations', value: 'radio' },
-  { label: 'Your Audio Files', value: 'audio' },
+  { label: 'library_tab', value: 'library' },
+  { label: 'radio_tab', value: 'radio' },
+  { label: 'files_tab', value: 'audio' },
 ]
 
 const getTabContent = (selectedTab: LibraryTab) => {
@@ -25,14 +27,19 @@ const getTabContent = (selectedTab: LibraryTab) => {
 
 const LibraryGrid = ({ selectedTab, setSelectedTab }: LibraryGridProps) => {
   const handleTabChange = (_: React.SyntheticEvent<Element, Event>, value: any) => setSelectedTab(value)
+  const { t } = useAppContext()
 
   return (
     <S.Main>
-      <Tabs value={selectedTab} onChange={handleTabChange}>
-        {LibraryTabs.map((el, i) => (
-          <Tab key={i} value={el.value} label={el.label} />
-        ))}
-      </Tabs>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Tabs value={selectedTab} onChange={handleTabChange}>
+          {LibraryTabs.map((el, i) => (
+            <Tab key={i} value={el.value} label={t(el.label)} />
+          ))}
+        </Tabs>
+        <UploadFiles />
+      </div>
+
       {getTabContent(selectedTab)}
     </S.Main>
   )

@@ -23,6 +23,8 @@ import axios, { isAxiosError } from 'axios'
 import { useMutation } from '@tanstack/react-query'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import * as S from './style'
+import { queryClient } from '../../assets/QueryClient'
+import { useAppContext } from '../../assets/contexts/App/useAppContext'
 const ACCEPTED_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/flac', 'audio/aac', 'audio/mp4']
 const ACCEPTED_EXTENSIONS = '.mp3,.wav,.ogg,.flac,.aac,.m4a'
 const MAX_FILE_SIZE_MB = 50
@@ -89,6 +91,12 @@ const UploadFiles = () => {
 
   const { mutate } = useMutation({
     mutationFn: postFiles,
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['songs'],
+      })
+      handleClose()
+    },
     onError: (error) => {
       if (isAxiosError(error) && error.status === 403) {
         toast({ message: 'login_credentials_error', severity: 'warning' })
@@ -102,11 +110,12 @@ const UploadFiles = () => {
     setOpen(false)
     setFiles([])
   }
+  const { t } = useAppContext()
 
   return (
     <>
       <Button variant="contained" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
-        Upload Audio
+        {t('upload_audio')}
       </Button>
 
       <Dialog open={open} onClose={handleClose} fullWidth>
@@ -114,7 +123,7 @@ const UploadFiles = () => {
           <S.TitleTop>
             <Box flex={1}>
               <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
-                Upload Audio Files
+                {t('upload_audio_files')}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 MP3, WAV, OGG, FLAC, AAC · Max {MAX_FILE_SIZE_MB} MB each
@@ -136,16 +145,16 @@ const UploadFiles = () => {
             </S.UploadBoxContent>
             <Box textAlign="center">
               <Typography fontWeight={600} variant="body1">
-                Drop audio files here
+                {t('drop_files_here')}
               </Typography>
               <Typography variant="body2" color="text.secondary" mt={0.25}>
-                or{' '}
+                {t('or')}{' '}
                 <Typography
                   component="span"
                   variant="body2"
                   sx={{ color: '#6C63FF', fontWeight: 600, textDecoration: 'underline' }}
                 >
-                  browse your device
+                  {t('browse_device')}
                 </Typography>
               </Typography>
             </Box>
@@ -164,7 +173,7 @@ const UploadFiles = () => {
           {files.length > 0 && (
             <Box>
               <Typography variant="subtitle2" color="text.secondary" mb={1} fontWeight={600}>
-                {files.length} file{files.length !== 1 ? 's' : ''} selected
+                {files.length} {files.length == 1 ? t('file') : t('files')}
               </Typography>
               <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {files.map((f, i) => (
@@ -194,7 +203,7 @@ const UploadFiles = () => {
                         }
                       />
                       <Chip
-                        label={'Ready'}
+                        label={t('ready')}
                         size="small"
                         color={'primary'}
                         variant="filled"
@@ -224,11 +233,11 @@ const UploadFiles = () => {
           }}
         >
           <Button onClick={handleClose} variant="outlined">
-            Cancel
+            {t('cancel')}
           </Button>
 
           <Button variant="contained" onClick={() => mutate()} startIcon={<CloudUploadIcon />}>
-            Upload {files.length > 0 ? `${files.length} file${files.length !== 1 ? 's' : ''}` : ''}
+            {t('upload')} {files.length > 0 ? `${files.length} ${files.length == 1 ? t('file') : t('files')}` : ''}
           </Button>
         </DialogActions>
       </Dialog>
