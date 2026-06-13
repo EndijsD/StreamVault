@@ -1,66 +1,93 @@
-import { createTheme } from '@mui/material/styles';
-import type { ThemeOptions } from '@mui/material/styles';
+import { createTheme } from '@mui/material/styles'
 
-export const tokens: ThemeOptions = {
-  palette: {
-    primary: {
-      main: '#3F5BFF',
-      light: '#6D8BFF',
-      dark: '#1A2E9E',
+const theme = createTheme({
+  colorSchemes: {
+    light: {
+      palette: {
+        primary: {
+          main: '#3F5BFF',
+          light: '#6D8BFF',
+          dark: '#1A2E9E',
+        },
+        secondary: {
+          main: '#FE6B8B',
+          light: '#FF9DB2',
+          dark: '#D94D6D',
+        },
+      },
     },
-    // secondary: {
-    //   main: '#7C5CFF',
-    //   light: '#A28BFF',
-    //   dark: '#4E33CC',
-    // },
-    secondary: {
-      main: '#FE6B8B',
-      light: '#FF9DB2',
-      dark: '#D94D6D',
+    dark: {
+      palette: {
+        primary: {
+          main: '#7A8CFF',
+          light: '#A3B1FF',
+          dark: '#4E63D9',
+        },
+        secondary: {
+          main: '#FF7FA8',
+          light: '#FFA6C2',
+          dark: '#D95C86',
+        },
+      },
     },
-    // info: {
-    //   main: '#53C8FF',
-    //   light: '#8BE3FF',
-    //   dark: '#1F9EDB',
-    //   //   contrastText: '#fff',
-    // },
-    // background: {
-    //   paper: '#07124F',
-    //   default: '#010A3D',
-    // },
   },
 
   typography: {
-    // allVariants: { color: '#010A3D' },
-    // fontFamily:
-    //   'var(--font-primary, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)',
+    fontFamily:
+      'var(--font-primary, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif)',
   },
-};
 
-export const components: ThemeOptions['components'] = {
-  MuiButton: {
-    defaultProps: {
-      disableElevation: true,
+  components: {
+    MuiButton: {
+      defaultProps: {
+        disableElevation: true,
+      },
+      styleOverrides: {
+        root: {
+          minWidth: 100,
+          fontWeight: 'bold',
+        },
+
+        contained: ({ theme }) => ({
+          background: `linear-gradient(
+        45deg,
+        ${theme.palette.primary.main} 30%,
+        ${theme.palette.secondary.main} 90%
+      )`,
+
+          backgroundSize: '200% 200%',
+          backgroundPosition: '20% 50%',
+
+          transition: 'background-position 0.3s ease-in-out, transform 0.2s ease-in-out',
+
+          boxShadow: theme.shadows[4],
+          height: theme.spacing(6),
+
+          '&:hover': {
+            backgroundPosition: '100% 50%',
+            transform: 'translateY(-2px)',
+            boxShadow: theme.shadows[4],
+          },
+
+          '&:active': {
+            boxShadow: theme.shadows[4],
+          },
+
+          '&.Mui-disabled': {
+            background: 'none',
+          },
+        }),
+      },
     },
-    styleOverrides: {
-      root: {
-        minWidth: 100,
-        fontWeight: 'bold',
+
+    MuiFormControl: {
+      styleOverrides: {
+        root: {
+          width: '100%',
+        },
       },
     },
   },
-  MuiFormControl: {
-    styleOverrides: {
-      root: {
-        width: '100%',
-      },
-    },
-  },
-};
+})
 
-const theme = createTheme({
-  ...tokens,
-  components: components,
-});
-
-export default theme;
+export default theme

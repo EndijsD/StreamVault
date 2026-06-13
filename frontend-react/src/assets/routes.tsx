@@ -7,6 +7,7 @@ import Library from '../pages/Library'
 import ProtectedRoute from '../components/ProtectedRoute'
 import RedirectRoute from '../components/RedirectRoute'
 import Register from '../pages/Register'
+import Settings from '../pages/Settings'
 
 export const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
           {
             path: 'library',
             element: <Library />,
+          },
+          {
+            path: 'settings',
+            element: <Settings />,
           },
         ],
       },

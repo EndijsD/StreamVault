@@ -112,12 +112,12 @@ router.post('/refresh', async (req, res) => {
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET
     if (!refreshSecret) return res.sendStatus(500)
 
-    const user = jwt.verify(refreshToken, refreshSecret) as User
+    const user = jwt.verify(refreshToken, refreshSecret)
 
     const accessSecret = process.env.ACCESS_TOKEN_SECRET
     if (!accessSecret) return res.sendStatus(500)
 
-    const accessToken = jwt.sign(user, accessSecret, { expiresIn: '15m' })
+    const accessToken = jwt.sign(user, accessSecret)
 
     res.cookie('accessToken', accessToken, {
       maxAge: 900000,

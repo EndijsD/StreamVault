@@ -32,31 +32,6 @@ router.get('/:id', authenticateSession, async (req, res) => {
   }
 })
 
-// router.post('/', async (req, res) => {
-//   try {
-//     const table = req.baseUrl.slice(1)
-
-//     if (req.body.parole) {
-//       req.body.parole = bcrypt.hashSync(req.body.parole, 10)
-//     }
-
-//     const columns = Object.keys(req.body)
-//     const values = Object.values(req.body)
-
-//     const [result] = await db.query<ResultSetHeader>(
-//       `INSERT INTO ?? (??) VALUES (?)`,
-//       [table, columns, values]
-//     )
-
-//     res.json({
-//       message: 'Added entry',
-//       id: result.insertId,
-//     })
-//   } catch (err) {
-//     res.status(500).json({ message: getErrorMessage(err) })
-//   }
-// })
-
 router.post('/', authenticateSession, async (req, res) => {
   try {
     const table = req.baseUrl.slice(1)
@@ -93,39 +68,6 @@ router.post('/', authenticateSession, async (req, res) => {
   }
 })
 
-// router.patch('/single/:id', authenticateSession, async (req, res) => {
-//   const table = req.baseUrl.slice(1)
-//   const column = table + '_id'
-//   const id = req.params.id
-
-//   if (req.body.parole) {
-//     req.body.parole = bcrypt.hashSync(req.body.parole, 10)
-//   }
-
-//   const columns = Object.keys(req.body)
-//   const columnSetters = Object.keys(req.body)
-//     .map(() => '?? = ?')
-//     .join(', ')
-
-//   const values = Object.values(req.body).map((value) =>
-//     !isNumeric(value) && moment(value, moment.ISO_8601, true).isValid()
-//       ? moment(value).format('YYYY-MM-DD HH:mm:ss')
-//       : value && (value.constructor === Array || typeof value === 'object')
-//         ? JSON.stringify(value)
-//         : value,
-//   )
-
-//   const setters = columns.flatMap((col, i) => [col, values[i]])
-
-//   db.query(`UPDATE ?? SET ${columnSetters} WHERE ?? = ?`, [table, ...setters, column, id], (err) => {
-//     if (err) {
-//       res.status(500).json({ message: err.message })
-//     } else {
-//       res.json({ message: 'Updated entry: ' + id })
-//     }
-//   })
-// })
-
 router.patch('/', authenticateSession, async (req, res) => {
   try {
     const table = req.baseUrl.slice(1)
@@ -140,8 +82,6 @@ router.patch('/', authenticateSession, async (req, res) => {
         delete update['id']
 
         if (!id || Object.keys(update).length === 0) return null
-
-        // if (update.password) update.password = bcrypt.hashSync(update.password, 10)
 
         const columns = Object.keys(update)
 
@@ -173,20 +113,6 @@ router.patch('/', authenticateSession, async (req, res) => {
     res.status(500).json({ message: getErrorMessage(err) })
   }
 })
-
-// router.delete('/single/:id', authenticateSession, async (req, res) => {
-//   const table = req.baseUrl.slice(1)
-//   const column = table + '_id'
-//   const id = req.params.id
-
-//   db.query(`DELETE FROM ?? WHERE ?? = ?`, [table, column, id], (err) => {
-//     if (err) {
-//       res.status(500).json({ message: err.message })
-//     } else {
-//       res.json({ message: 'Deleted entry: ' + id })
-//     }
-//   })
-// })
 
 router.delete('/', authenticateSession, async (req, res) => {
   try {

@@ -9,7 +9,7 @@ export interface AppContext {
   isInitializing: boolean
   initializationError: unknown
   user: DBUserStripped | null
-  onUserChange: (user: DBUserStripped) => void
+  onUserChange: (user: DBUserStripped | null) => void
   activateRefresh: () => void
 }
 

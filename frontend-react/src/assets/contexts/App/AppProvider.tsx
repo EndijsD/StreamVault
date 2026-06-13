@@ -24,7 +24,7 @@ export const AppProvider = ({ children }: Props) => {
   }
 
   const activateRefresh = () => {
-    refreshPooling.current = setInterval(refresh, 600000) // 10 min
+    refreshPooling.current = setInterval(refresh, 600000)
   }
 
   useEffect(() => {
@@ -46,7 +46,6 @@ export const AppProvider = ({ children }: Props) => {
     }
 
     checkAuthAndStartRefresh()
-    return () => clearInterval(refreshPooling.current)
   }, [])
 
   const t = (key: TranslationKey) =>
