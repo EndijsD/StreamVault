@@ -203,14 +203,14 @@ router.get('', authenticateSession, async (req, res) => {
 })
 
 // Get a section of audio
-router.get('/:songId', async (req, res) => {
+router.get('/:songId', authenticateSession, async (req, res) => {
   const songId = req.params.songId
   if (Array.isArray(songId)) {
     return res.status(400).json({ message: 'Multiple ids for streaming are not allowed' })
   }
 
   const conn = await db.getConnection()
-  const userId = 2
+  const userId = req.user.id
 
   try {
     const [rows] = await conn.query<RowDataPacket[]>(`SELECT mime_type FROM songs WHERE id = ? AND users_id = ?`, [
