@@ -16,9 +16,7 @@ export const Container = styled(Page)({
 export const StyledBox = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
   flex: 1,
-  width: '100%',
   padding: theme.spacing(3),
   gap: theme.spacing(3),
   overflow: 'auto',

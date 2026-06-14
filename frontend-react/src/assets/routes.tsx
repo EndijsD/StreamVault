@@ -9,8 +9,8 @@ import Register from '../pages/Register'
 import Settings from '../pages/Settings'
 import PublicLayout from '../components/PublicLayout'
 import Library from '../pages/Library'
-import RadioStations from '../features/LibraryGrid/TabPages/RadioStations'
-import AudioFiles from '../features/LibraryGrid/TabPages/AudioFiles'
+import RadioStations from '../pages/RadioStations'
+import AudioFiles from '../pages/AudioFiles'
 import PlaylistView from '../pages/PlaylistView'
 
 export const router = createBrowserRouter([

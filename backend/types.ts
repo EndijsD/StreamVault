@@ -15,20 +15,18 @@ export type Song = {
   users_id: number
 }
 
-export interface FolderRow extends RowDataPacket {
+interface LibraryNode extends RowDataPacket {
   id: number
   name: string
   description: string | null
-  parent_folders_id: number | null
-  users_id: number
+  image: string | null
 }
 
-export interface PlaylistRow extends RowDataPacket {
-  id: number
-  name: string
-  description: string | null
-  users_id: number
+export interface FolderRow extends LibraryNode {
+  parent_folders_id: number | null
 }
+
+export interface PlaylistRow extends LibraryNode {}
 
 export interface FolderPlaylistRow extends RowDataPacket {
   folders_id: number

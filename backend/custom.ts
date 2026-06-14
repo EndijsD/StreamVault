@@ -98,6 +98,7 @@ router.get('/library', authenticateSession, async (req, res) => {
         description: folder.description,
         children: [],
         parentId: folder.parent_folders_id,
+        image: null,
       })
     }
 
@@ -108,6 +109,7 @@ router.get('/library', authenticateSession, async (req, res) => {
         id: playlist.id,
         name: playlist.name,
         description: playlist.description,
+        image: playlist.image,
       })
     }
 

@@ -23,6 +23,7 @@ interface LibraryNode {
   id: number
   name: string
   description: string | null
+  image: string | null
 }
 
 export interface Playlist extends LibraryNode {

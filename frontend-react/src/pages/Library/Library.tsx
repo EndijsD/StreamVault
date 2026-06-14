@@ -78,7 +78,7 @@ const Library = () => {
 
       <S.Grid>
         {itemsToDisplay.map((el, i) => (
-          <PlaylistCard data={el} key={i} onClick={(id) => nav(`/library/${el.type}/${id}`, { state: el })} />
+          <PlaylistCard data={el} key={i} onClick={() => nav(`/library/${el.type}/${el.id}`, { state: el })} />
         ))}
       </S.Grid>
     </S.Container>

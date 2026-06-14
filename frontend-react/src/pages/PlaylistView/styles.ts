@@ -3,7 +3,6 @@ import { Box, Paper, styled, Typography } from '@mui/material'
 export const Container = styled(Box)({
   display: 'flex',
   flexDirection: 'column',
-  width: '100%',
 })
 
 export const NoImage = styled(Box)(({ theme }) => ({
@@ -24,7 +23,6 @@ export const NoImage = styled(Box)(({ theme }) => ({
 
 export const Header = styled(Paper)(({ theme }) => ({
   display: 'flex',
-  width: '100%',
   gap: theme.spacing(4),
   padding: theme.spacing(2),
   alignItems: 'center',

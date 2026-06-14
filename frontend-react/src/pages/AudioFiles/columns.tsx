@@ -1,7 +1,7 @@
-import type { DBSong } from '../../../../../../shared-types/types'
-import type { ColumnDef } from '../../../../components/DataTable/props'
+import type { DBSong } from '../../../../shared-types/types'
+import type { ColumnDef } from '../../components/DataTable/props'
 import * as S from './style'
-import { formatDate } from '../../../../functions'
+import { formatDate } from '../../functions'
 import AudiotrackIcon from '@mui/icons-material/Audiotrack'
 
 const formatDuration = (seconds?: number | null) => {

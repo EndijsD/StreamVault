@@ -1,6 +1,12 @@
 import type { LibraryItem } from '../../../../shared-types/types'
 
+interface Station {
+  type: 'station'
+  image: string
+  name: string
+}
+
 export interface Props {
-  data: LibraryItem
-  onClick?: (id: number) => void
+  data: LibraryItem | Station
+  onClick?: () => void
 }

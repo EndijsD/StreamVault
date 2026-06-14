@@ -1,11 +1,13 @@
-import { usePlayerContext } from '../../../../assets/contexts/PlayerContext/usePlayerContext'
-import { RadioStationData } from '../../../../RadioStations'
-import PlaylistCard from '../../PlaylistCard'
-import * as S from '../Libraries/style'
+import { usePlayerContext } from '../../assets/contexts/PlayerContext/usePlayerContext'
+import PlaylistCard from '../../components/PlaylistCard'
+import { RadioStationData } from '../../RadioStations'
+import * as S from './style'
+
 const RadioStations = () => {
   const { play } = usePlayerContext()
+
   return (
-    <S.TabContentWrapper>
+    <S.Grid>
       {RadioStationData.map((el, i) => (
         <PlaylistCard
           onClick={() =>
@@ -19,11 +21,11 @@ const RadioStations = () => {
               playlistRows: [],
             })
           }
-          data={{ id: i, image: el.imagePath, imageExt: '', name: el.name }}
+          data={{ image: el.imagePath, name: el.name, type: 'station' }}
           key={i}
         />
       ))}
-    </S.TabContentWrapper>
+    </S.Grid>
   )
 }
 
