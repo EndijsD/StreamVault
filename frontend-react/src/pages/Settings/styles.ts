@@ -8,6 +8,7 @@ export const Container = styled(Box)(({ theme }) => ({
   width: '100%',
   padding: theme.spacing(3),
   gap: theme.spacing(3),
+  overflow: 'auto',
 }))
 
 export const StyledPaper = styled(Paper)(({ theme }) => ({

@@ -15,17 +15,3 @@ export const PaddedContent = styled('div')({
   flexDirection: 'column',
   gap: 16,
 })
-
-export const PageLabel = styled('div')(({ theme }) => ({
-  display: 'flex',
-  width: '100%',
-  padding: 16,
-  backgroundImage: `linear-gradient(to right,${theme.palette.primary.main} 10%, ${theme.palette.secondary.main} 150%)`,
-  borderRadius: 8,
-}))
-
-export const Title = styled('div')({
-  fontWeight: 600,
-  fontSize: 20,
-  color: '#fff',
-})

@@ -36,6 +36,7 @@ export const AppProvider = ({ children }: Props) => {
         if (status !== 200) return
 
         setUser(data)
+        setLocale(data.locale)
         refresh()
         activateRefresh()
       } catch (error) {
@@ -46,6 +47,7 @@ export const AppProvider = ({ children }: Props) => {
     }
 
     checkAuthAndStartRefresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const t = (key: TranslationKey) =>

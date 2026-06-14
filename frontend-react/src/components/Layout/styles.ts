@@ -13,8 +13,7 @@ export const StyledBox = styled(Box)(({ theme }) => ({
 export const OutletWrapper = styled('div')({
   position: 'relative',
   zIndex: 2,
+  height: '100vh',
   display: 'flex',
   flexDirection: 'column',
-  flex: 1,
-  height: '100%',
 })

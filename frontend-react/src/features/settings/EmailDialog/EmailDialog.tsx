@@ -92,7 +92,6 @@ const EmailDialog = () => {
             required
             size='small'
             label={t('email')}
-            variant='outlined'
             value={form.email}
             onChange={(e) => {
               setForm({ ...form, email: e.target.value })
@@ -111,7 +110,6 @@ const EmailDialog = () => {
             required
             size='small'
             label={t('confirm_email')}
-            variant='outlined'
             value={form.confirmEmail}
             onChange={(e) => {
               setForm({ ...form, confirmEmail: e.target.value })
@@ -127,7 +125,6 @@ const EmailDialog = () => {
           <S.StyledTextField
             required
             size='small'
-            variant='outlined'
             label={t('password')}
             value={form.password}
             onChange={(event) => {
