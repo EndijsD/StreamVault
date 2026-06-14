@@ -10,13 +10,13 @@ import { useState, type MouseEvent, type ReactNode } from 'react'
 import TableHeader from './TableHeader'
 import TableToolBar from './TableToolBar'
 import ContextMenu from './ContextMenu'
-import type { ContextMenuOption } from './ContextMenu/props'
 
 export const DataTable = <T extends { id: number | string }>({
   rows,
   columns,
   orderState,
   setOrderState,
+  options,
 }: DataTableProps<T>) => {
   const [selected, setSelected] = useState<(number | string)[]>([])
   const [displayType, setDisplayType] = useState<DisplayType>('list')
@@ -48,8 +48,13 @@ export const DataTable = <T extends { id: number | string }>({
     }
   }
 
+  const getSelectedRows = (): T[] => {
+    return rows.filter((row) => selected.includes(row.id))
+  }
+
   const handleContextMenu = (event: MouseEvent<HTMLTableRowElement, globalThis.MouseEvent>, row: T) => {
     event.preventDefault()
+    if (selected.length === 0) handleRowClick(event, row.id)
     setContextMenuState((prev) =>
       prev.open
         ? { open: false, row: null, pos: null }
@@ -63,20 +68,18 @@ export const DataTable = <T extends { id: number | string }>({
     orderBy && orderDir && sortFn ? rows.sort((a, b) => (orderDir == 'asc' ? sortFn(a, b) : sortFn(b, a))) : rows
   const dense = displayType == 'compact'
 
-  const { pos, open } = contextMenuState
-
-  const Options: ContextMenuOption[] = [
-    { label: 'edit', action: () => {} },
-    { label: 'delete', action: () => {} },
-  ]
+  const { pos, open, row } = contextMenuState
 
   return (
     <>
-      {pos && open && (
-        <ContextMenu
+      {pos && open && row && options && (
+        <ContextMenu<T>
           anchorPosition={{ top: pos.y, left: pos.x }}
           handleClose={() => setContextMenuState({ open: false, pos: null, row: null })}
-          options={Options}
+          options={options}
+          selectedRows={getSelectedRows()}
+          currentRow={row}
+          all={rows}
         />
       )}
       <Box sx={{ width: '100%', height: '100%' }}>

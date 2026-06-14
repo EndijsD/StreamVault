@@ -44,6 +44,7 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
   const [files, setFiles] = useState<File[]>([])
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { t } = useAppContext()
   const toast = useToast()
   const addFiles = useCallback((incoming: File[]) => {
     const valid = incoming.filter((f) => {
@@ -89,7 +90,7 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
     return axios.post('/files', formData)
   }
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: postFiles,
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -110,7 +111,15 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
     onOpenChange(false)
     setFiles([])
   }
-  const { t } = useAppContext()
+
+  const submit = () => {
+    if (isPending) return
+    if (files.length == 0) {
+      toast({ message: 'upload_no_files', severity: 'warning' })
+      return
+    }
+    mutate()
+  }
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth>
@@ -222,7 +231,7 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
           gap: 1,
         }}
       >
-        <Button variant='contained' onClick={() => mutate()} startIcon={<CloudUploadIcon />}>
+        <Button variant='contained' loading={isPending} onClick={submit} startIcon={<CloudUploadIcon />}>
           {t('upload')} {files.length > 0 ? `${files.length} ${files.length == 1 ? t('file') : t('files')}` : ''}
         </Button>
 

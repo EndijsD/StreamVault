@@ -205,14 +205,13 @@ router.get('', authenticateSession, async (req, res) => {
 // Get a section of audio
 router.get('/:songId', authenticateSession, async (req, res) => {
   const songId = req.params.songId
-  if (Array.isArray(songId))
-    return res.status(400).json({
-      message: 'Multiple ids for streaming are not allowed',
-    })
+  if (Array.isArray(songId)) {
+    return res.status(400).json({ message: 'Multiple ids for streaming are not allowed' })
+  }
 
   const conn = await db.getConnection()
-
   const userId = req.user.id
+
   try {
     const [rows] = await conn.query<RowDataPacket[]>(`SELECT mime_type FROM songs WHERE id = ? AND users_id = ?`, [
       songId,
@@ -224,48 +223,56 @@ router.get('/:songId', authenticateSession, async (req, res) => {
     const { mime_type } = rows[0]
     const filePath = getFilePath(userId.toString(), songId)
     const stat = await fsPromises.stat(filePath)
+    const fileSize = stat.size
     const range = req.headers.range
 
     if (!range) {
       res.writeHead(200, {
         'Content-Type': mime_type,
-        'Content-Length': stat.size,
+        'Content-Length': fileSize,
         'Accept-Ranges': 'bytes',
       })
       return fs.createReadStream(filePath).pipe(res)
     }
 
-    const HEADER_SIZE = 128 * 1024 // 128kb covers most ID3/codec headers
-
-    const parts = range.replace('bytes=', '').split('-')
-    const start = parseInt(parts[0], 10)
-    const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1
-
-    // If seeking past the header, prepend it
-    if (start > HEADER_SIZE) {
-      const headerStream = fs.createReadStream(filePath, { start: 0, end: HEADER_SIZE - 1 })
-      const bodyStream = fs.createReadStream(filePath, { start, end })
-
-      res.writeHead(206, {
-        'Content-Type': mime_type,
-        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': end - start + 1 + HEADER_SIZE,
-      })
-
-      headerStream.pipe(res, { end: false })
-      headerStream.on('end', () => bodyStream.pipe(res))
-    } else {
-      res.writeHead(206, {
-        'Content-Type': mime_type,
-        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': end - start + 1,
-      })
-      fs.createReadStream(filePath, { start, end }).pipe(res)
+    const match = range.match(/^bytes=(\d*)-(\d*)$/)
+    if (!match || (!match[1] && !match[2])) {
+      res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` })
+      return res.end()
     }
+
+    let start: number
+    let end: number
+
+    if (match[1] === '') {
+      // suffix range: bytes=-500 -> last 500 bytes
+      const suffixLength = parseInt(match[2], 10)
+      start = Math.max(fileSize - suffixLength, 0)
+      end = fileSize - 1
+    } else {
+      start = parseInt(match[1], 10)
+      end = match[2] ? parseInt(match[2], 10) : fileSize - 1
+    }
+
+    if (start >= fileSize || start > end) {
+      res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` })
+      return res.end()
+    }
+
+    end = Math.min(end, fileSize - 1)
+
+    res.writeHead(206, {
+      'Content-Type': mime_type,
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': end - start + 1,
+    })
+
+    const stream = fs.createReadStream(filePath, { start, end })
+    stream.on('error', () => res.destroy())
+    stream.pipe(res)
   } catch {
-    res.sendStatus(404)
+    if (!res.headersSent) res.sendStatus(404)
   } finally {
     conn.release()
   }

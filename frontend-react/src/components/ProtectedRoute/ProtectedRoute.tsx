@@ -4,6 +4,7 @@ import { CircularProgress } from '@mui/material'
 import * as S from './styles'
 import Header from '../Header'
 import PlayerControlPanel from '../../features/PlayerControlPanel'
+import { PlayerProvider } from '../../assets/contexts/PlayerContext/PlayerProvider'
 
 const ProtectedRoute = () => {
   const { user, isInitializing } = useAppContext()
@@ -16,15 +17,17 @@ const ProtectedRoute = () => {
     )
 
   return user ? (
-    <S.Page>
-      <Header />
+    <PlayerProvider>
+      <S.Page>
+        <Header />
 
-      <S.StyledBox>
-        <Outlet />
-      </S.StyledBox>
+        <S.StyledBox>
+          <Outlet />
+        </S.StyledBox>
 
-      <PlayerControlPanel />
-    </S.Page>
+        <PlayerControlPanel />
+      </S.Page>
+    </PlayerProvider>
   ) : (
     <Navigate to='/login' replace />
   )

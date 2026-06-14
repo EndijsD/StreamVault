@@ -1,20 +1,30 @@
+import { usePlayerContext } from '../../../../assets/contexts/PlayerContext/usePlayerContext'
 import { RadioStationData } from '../../../../RadioStations'
 import PlaylistCard from '../../PlaylistCard'
 import * as S from '../Libraries/style'
 const RadioStations = () => {
+  const { play } = usePlayerContext()
   return (
     <S.TabContentWrapper>
       {RadioStationData.map((el, i) => (
-        <PlaylistCard data={{ id: i, image: el.imagePath, imageExt: '', name: el.name }} key={i} />
+        <PlaylistCard
+          onClick={() =>
+            play({
+              type: 'radio',
+              title: el.name,
+              artist: '',
+              duration: null,
+              src: el.url,
+              image: el.imagePath,
+              playlistRows: [],
+            })
+          }
+          data={{ id: i, image: el.imagePath, imageExt: '', name: el.name }}
+          key={i}
+        />
       ))}
     </S.TabContentWrapper>
   )
 }
 
 export default RadioStations
-
-{
-  /* <audio autoPlay>
-        <source src="https://stream.radioskonto.lv:8443/stereo" type="audio/mpeg" />
-      </audio> */
-}

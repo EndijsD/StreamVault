@@ -2,6 +2,7 @@ import type { SxProps } from '@mui/material'
 import type { TranslationKey } from '../../assets/translations'
 import type { Theme } from '@mui/material/styles'
 import type { Dispatch, SetStateAction } from 'react'
+import type { ContextMenuOption } from './ContextMenu/props'
 
 export type OrderDir = 'asc' | 'desc' | null
 export type DisplayType = 'list' | 'compact'
@@ -21,6 +22,7 @@ export interface DataTableProps<T extends { id: number | string }> {
   columns: ColumnDef<T>[]
   orderState: Order<T>
   setOrderState: Dispatch<SetStateAction<Order<T>>>
+  options?: ContextMenuOption<T>[]
 }
 
 export interface ToolbarProps {
