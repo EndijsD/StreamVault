@@ -69,4 +69,6 @@ export default {
   files: 'files',
   upload: 'Upload',
   ready: 'Ready',
+  duration: 'Duration',
+  edit: 'Edit',
 } satisfies Record<string, string>

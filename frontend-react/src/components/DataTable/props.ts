@@ -11,15 +11,14 @@ export type Order<T> = { orderDir: OrderDir; orderBy: keyof T | null }
 export interface ColumnDef<T> {
   id: keyof T
   label: TranslationKey
-  numeric?: boolean
   disablePadding?: boolean
-  render?: (value: T[keyof T], row: T) => React.ReactNode
+  sort?: (a: T, b: T) => number
+  render?: (value: T[keyof T], row: T, dense: boolean) => React.ReactNode
 }
 
 export interface DataTableProps<T extends { id: number | string }> {
   rows: T[]
   columns: ColumnDef<T>[]
-
   orderState: Order<T>
   setOrderState: Dispatch<SetStateAction<Order<T>>>
 }

@@ -6,6 +6,7 @@ import { useToast } from '../../../../assets/contexts/Toast/useToast'
 import { useEffect, useState } from 'react'
 import { columns } from './columns'
 import type { Order } from '../../../../components/DataTable/props'
+import { CircularProgress } from '@mui/material'
 
 const fetchFiles = async () => {
   return await axios.get<DBSong[]>('/files')
@@ -16,7 +17,7 @@ const AudioFiles = () => {
   const [rows, setRows] = useState<DBSong[]>([])
   const [orderState, setOrderState] = useState<Order<DBSong>>({ orderBy: null, orderDir: null })
 
-  const { error, data } = useQuery({
+  const { error, data, isPending } = useQuery({
     queryKey: ['songs'],
     queryFn: fetchFiles,
   })
@@ -29,7 +30,13 @@ const AudioFiles = () => {
 
   return (
     <>
-      <DataTable<DBSong> rows={rows} columns={columns} orderState={orderState} setOrderState={setOrderState} />
+      {isPending ? (
+        <div style={{ display: 'flex', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+          <CircularProgress size={60} />
+        </div>
+      ) : (
+        <DataTable<DBSong> rows={rows} columns={columns} orderState={orderState} setOrderState={setOrderState} />
+      )}
     </>
   )
 }

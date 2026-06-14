@@ -71,4 +71,6 @@ export default {
   files: 'faili',
   upload: 'Augšupielādēt',
   ready: 'Gatavs',
+  duration: 'Ilgums',
+  edit: 'Rediģēt',
 } satisfies Record<TranslationKey, string>
