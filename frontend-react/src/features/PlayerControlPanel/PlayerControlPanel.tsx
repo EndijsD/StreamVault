@@ -16,42 +16,46 @@ import {
 import * as S from './styles'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
 import { formatTime } from './functions'
-
-type RepeatMode = 'none' | 'all' | 'one'
+import { usePlayerContext } from '../../assets/contexts/PlayerContext/usePlayerContext'
 
 const PlayerControlPanel = () => {
-  const { t } = useAppContext()
-  const theme = useTheme()
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(74)
-  const [duration] = useState(213)
-  const [volume, setVolume] = useState(70)
   const [prevVolume, setPrevVolume] = useState(70)
   const [isMuted, setIsMuted] = useState(false)
-  const [isShuffle, setIsShuffle] = useState(false)
-  const [repeatMode, setRepeatMode] = useState<RepeatMode>('none')
-
-  const effectiveVolume = isMuted ? 0 : volume
+  const { t } = useAppContext()
+  const theme = useTheme()
+  const { playerState, playerRef, trackInfo, setPlayerStateValue, changeTrack } = usePlayerContext()
+  const { isPlaying, isShuffle, progress, repeatMode, volume } = playerState
 
   const handleMuteToggle = useCallback(() => {
     if (isMuted) {
       setIsMuted(false)
       setPrevVolume(volume)
-      setVolume(prevVolume)
+      setPlayerStateValue('volume', prevVolume)
     } else {
       setIsMuted(true)
       setPrevVolume(volume)
-      setVolume(0)
+      setPlayerStateValue('volume', 0)
     }
   }, [isMuted, prevVolume, volume])
 
-  const handleRepeat = () => setRepeatMode((m) => (m === 'none' ? 'all' : m === 'all' ? 'one' : 'none'))
+  const handleRepeat = () =>
+    setPlayerStateValue('repeatMode', repeatMode === 'none' ? 'all' : repeatMode === 'all' ? 'one' : 'none')
+
+  const { artist, title, type, image, duration } = trackInfo
+
+  const isPlayingRadio = type === 'radio'
+  const effectiveVolume = isMuted ? 0 : volume
 
   const VolumeIcon =
     effectiveVolume === 0 ? (isMuted ? VolumeOff : VolumeMute) : effectiveVolume < 50 ? VolumeDown : VolumeUp
 
   return (
     <S.StyledAppBar component='footer' color='default'>
+      <audio
+        ref={playerRef}
+        onPause={() => setPlayerStateValue('isPlaying', false)}
+        onPlay={() => setPlayerStateValue('isPlaying', true)}
+      />
       <S.ContentGrid>
         <S.SongBox>
           <Box
@@ -59,9 +63,13 @@ const PlayerControlPanel = () => {
               width: 48,
               height: 48,
               borderRadius: 1.5,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              flexShrink: 0,
-              boxShadow: `0 0 10px ${theme.palette.primary.main}80`,
+              ...(image
+                ? { backgroundImage: `url(${image})`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }
+                : {
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                    flexShrink: 0,
+                    boxShadow: `0 0 10px ${theme.palette.primary.main}80`,
+                  }),
             }}
           />
           <S.TextBox>
@@ -85,10 +93,10 @@ const PlayerControlPanel = () => {
                   },
                 },
               }}
-              title='Someth i ngdddd dd ddd asd a wd awd'
+              title={title}
             >
               <Typography noWrap variant='subtitle2'>
-                Someth i ngdddd dd ddd asd a wd awd
+                {title}
               </Typography>
             </Tooltip>
 
@@ -114,32 +122,37 @@ const PlayerControlPanel = () => {
               }}
               title='Someone'
             >
-              <S.SmallText noWrap>Someone</S.SmallText>
+              <S.SmallText noWrap>{artist}</S.SmallText>
             </Tooltip>
           </S.TextBox>
         </S.SongBox>
 
         <Stack direction='row' alignItems='center' justifyContent='center' spacing={1}>
           <Tooltip title={isShuffle ? t('shuffle_on') : t('shuffle_off')}>
-            <S.StyledIconButton active={isShuffle} size='small' onClick={() => setIsShuffle((v) => !v)}>
+            <S.StyledIconButton
+              disabled={isPlayingRadio}
+              active={isShuffle}
+              size='small'
+              onClick={() => setPlayerStateValue('isShuffle', !isShuffle)}
+            >
               <Shuffle fontSize='small' />
             </S.StyledIconButton>
           </Tooltip>
 
           <Tooltip title={t('previous')}>
-            <IconButton>
+            <IconButton onClick={() => changeTrack('prev')}>
               <SkipPrevious />
             </IconButton>
           </Tooltip>
 
           <Tooltip title={isPlaying ? t('pause') : t('play')}>
-            <S.PlayPauseIconButton onClick={() => setIsPlaying((v) => !v)}>
+            <S.PlayPauseIconButton onClick={() => setPlayerStateValue('isPlaying', !isPlaying)}>
               {isPlaying ? <Pause /> : <PlayArrow />}
             </S.PlayPauseIconButton>
           </Tooltip>
 
           <Tooltip title={t('next')}>
-            <IconButton>
+            <IconButton onClick={() => changeTrack('next')}>
               <SkipNext />
             </IconButton>
           </Tooltip>
@@ -147,7 +160,12 @@ const PlayerControlPanel = () => {
           <Tooltip
             title={repeatMode === 'none' ? t('repeat_off') : repeatMode === 'all' ? t('repeat_all') : t('repeat_one')}
           >
-            <S.StyledIconButton active={repeatMode !== 'none'} size='small' onClick={handleRepeat}>
+            <S.StyledIconButton
+              disabled={isPlayingRadio}
+              active={repeatMode !== 'none'}
+              size='small'
+              onClick={handleRepeat}
+            >
               {repeatMode === 'one' ? (
                 <S.RepeatBox>
                   <RepeatOne fontSize='small' />
@@ -175,7 +193,7 @@ const PlayerControlPanel = () => {
           <S.StyledVolumeSlider
             value={volume}
             onChange={(_, v) => {
-              setVolume(v as number)
+              setPlayerStateValue('volume', v as number)
               setPrevVolume(v as number)
               if (v === 0) setIsMuted(true)
               else setIsMuted(false)
@@ -186,15 +204,16 @@ const PlayerControlPanel = () => {
 
       <Box>
         <S.StyledSlider
+          disabled={isPlayingRadio}
           value={progress}
-          max={duration}
+          max={duration ?? 0}
           valueLabelDisplay='auto'
           valueLabelFormat={(v) => formatTime(v)}
-          onChange={(_, v) => setProgress(v as number)}
+          onChange={(_, v) => setPlayerStateValue('progress', v as number)}
         />
         <S.SliderLabelBox>
-          <S.SmallText variant='caption'>{formatTime(progress)}</S.SmallText>
-          <S.SmallText variant='caption'>{formatTime(duration)}</S.SmallText>
+          <S.SmallText variant='caption'>{isPlayingRadio ? '--:--' : formatTime(progress)}</S.SmallText>
+          <S.SmallText variant='caption'>{isPlayingRadio ? '--:--' : formatTime(duration ?? 0)}</S.SmallText>
         </S.SliderLabelBox>
       </Box>
     </S.StyledAppBar>

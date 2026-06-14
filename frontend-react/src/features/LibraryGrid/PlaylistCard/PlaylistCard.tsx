@@ -3,7 +3,7 @@ import type { Library } from '../props'
 import * as S from './style'
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusic'
 
-const PlaylistCard = ({ data, onClick }: { data: Library; onClick?: () => {} }) => {
+const PlaylistCard = ({ data, onClick }: { data: Library; onClick?: () => void }) => {
   const { name, image, imageExt } = data
   return (
     <S.Main onClick={onClick}>
