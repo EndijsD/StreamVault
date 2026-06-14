@@ -1,4 +1,5 @@
-import type { DBUserStripped } from '../shared-types/types.js'
+import type { RowDataPacket } from 'mysql2'
+import type { DBUserStripped, Folder } from '../shared-types/types.js'
 
 export interface User extends DBUserStripped {
   password: string
@@ -12,4 +13,28 @@ export type Song = {
   image_mime_type: string | null
   upload_date: Date
   users_id: number
+}
+
+export interface FolderRow extends RowDataPacket {
+  id: number
+  name: string
+  description: string | null
+  parent_folders_id: number | null
+  users_id: number
+}
+
+export interface PlaylistRow extends RowDataPacket {
+  id: number
+  name: string
+  description: string | null
+  users_id: number
+}
+
+export interface FolderPlaylistRow extends RowDataPacket {
+  folders_id: number
+  playlists_id: number
+}
+
+export interface TempFolder extends Folder {
+  parentId: number | null
 }

@@ -92,4 +92,5 @@ export default {
   unmute: 'Ieslēgt skaņu',
   duration: 'Ilgums',
   edit: 'Rediģēt',
+  library: 'Bibliotēka',
 } satisfies Record<TranslationKey, string>

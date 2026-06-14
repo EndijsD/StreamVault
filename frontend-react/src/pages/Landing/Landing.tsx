@@ -12,9 +12,9 @@ const Landing = () => {
       <S.Title variant='h2'>StreamVault</S.Title>
 
       <S.ButtonBox>
-        <Button variant='contained' onClick={() => nav('/login')}>
+        <S.PrimaryButton variant='contained' onClick={() => nav('/login')}>
           {t('log_in')}
-        </Button>
+        </S.PrimaryButton>
         <Button onClick={() => nav('/register')}>{t('sign_up')}</Button>
       </S.ButtonBox>
     </S.Container>

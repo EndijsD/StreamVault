@@ -85,7 +85,6 @@ const theme = createTheme({
           transition: 'background-position 0.3s ease-in-out, transform 0.2s ease-in-out',
 
           boxShadow: theme.shadows[4],
-          height: theme.spacing(6),
 
           '&:hover': {
             backgroundPosition: '100% 50%',

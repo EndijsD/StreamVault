@@ -35,7 +35,7 @@ const Login = () => {
       onUserChange(data)
       onLocaleChange(data.locale as Locale)
       activateRefresh()
-      nav('/library')
+      nav('/home')
     },
     onError: (error) => {
       if (isAxiosError(error) && error.status === 403) {

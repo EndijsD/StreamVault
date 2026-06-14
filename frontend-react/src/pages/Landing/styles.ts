@@ -1,4 +1,4 @@
-import { Box, styled, Typography } from '@mui/material'
+import { Box, Button, styled, Typography } from '@mui/material'
 
 export const Container = styled(Box)({
   display: 'flex',
@@ -12,9 +12,15 @@ export const Container = styled(Box)({
 export const Title = styled(Typography)(({ theme }) => ({
   position: 'absolute',
   top: theme.spacing(8),
-  color: theme.palette.primary.main,
   fontWeight: theme.typography.fontWeightBold,
-  textShadow: `0px 0px 1px ${theme.palette.grey[900]}`,
+  color: 'transparent',
+  backgroundClip: 'text',
+  backgroundImage: `linear-gradient(
+        10deg,
+        ${theme.palette.primary.main},
+        ${theme.palette.secondary.main} 90%
+      )`,
+  filter: `drop-shadow(0 0 4px ${theme.palette.grey[200]})`,
 }))
 
 export const ButtonBox = styled(Box)(({ theme }) => ({
@@ -23,4 +29,8 @@ export const ButtonBox = styled(Box)(({ theme }) => ({
   gap: theme.spacing(2),
   width: '100%',
   maxWidth: 200,
+}))
+
+export const PrimaryButton = styled(Button)(({ theme }) => ({
+  height: theme.spacing(6),
 }))

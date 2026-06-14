@@ -1,18 +1,21 @@
 import { createBrowserRouter } from 'react-router'
 import NotFound from '../pages/NotFound'
 import Landing from '../pages/Landing'
-import Layout from '../components/Layout'
 import Login from '../pages/Login'
-import Library from '../pages/Library'
+import Home from '../pages/Home'
 import ProtectedRoute from '../components/ProtectedRoute'
 import RedirectRoute from '../components/RedirectRoute'
 import Register from '../pages/Register'
 import Settings from '../pages/Settings'
+import PublicLayout from '../components/PublicLayout'
+import Library from '../pages/Library'
+import RadioStations from '../features/LibraryGrid/TabPages/RadioStations'
+import AudioFiles from '../features/LibraryGrid/TabPages/AudioFiles'
+import PlaylistView from '../pages/PlaylistView'
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Layout />,
+    element: <PublicLayout />,
     children: [
       {
         index: true,
@@ -32,21 +35,32 @@ export const router = createBrowserRouter([
         element: <Register />,
       },
       {
-        element: <ProtectedRoute />,
+        path: '*',
+        element: <NotFound />,
+      },
+    ],
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <Home />,
         children: [
           {
             path: 'library',
-            element: <Library />,
+            children: [
+              { index: true, element: <Library /> },
+              { path: 'folder/:id', element: <Library /> },
+              { path: 'playlist/:id', element: <PlaylistView /> },
+            ],
           },
-          {
-            path: 'settings',
-            element: <Settings />,
-          },
+          { path: 'radio', element: <RadioStations /> },
+          { path: 'audio', element: <AudioFiles /> },
         ],
       },
       {
-        path: '*',
-        element: <NotFound />,
+        path: 'settings',
+        element: <Settings />,
       },
     ],
   },

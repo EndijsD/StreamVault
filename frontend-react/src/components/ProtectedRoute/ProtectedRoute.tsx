@@ -16,13 +16,15 @@ const ProtectedRoute = () => {
     )
 
   return user ? (
-    <>
+    <S.Page>
       <Header />
 
-      <Outlet />
+      <S.StyledBox>
+        <Outlet />
+      </S.StyledBox>
 
       <PlayerControlPanel />
-    </>
+    </S.Page>
   ) : (
     <Navigate to='/login' replace />
   )

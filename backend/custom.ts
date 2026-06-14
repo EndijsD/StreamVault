@@ -3,8 +3,9 @@ import { authenticateSession } from './auth.ts'
 import { getErrorMessage } from './functions.ts'
 import type { RowDataPacket } from 'mysql2'
 import db from './db.ts'
-import type { User } from './types.ts'
+import type { FolderPlaylistRow, FolderRow, PlaylistRow, TempFolder, User } from './types.ts'
 import bcrypt from 'bcrypt'
+import type { Playlist } from '../shared-types/types.ts'
 
 const router = express.Router()
 
@@ -76,6 +77,97 @@ router.delete('/account', authenticateSession, async (req, res) => {
     res.json({ message: 'Account deleted' })
   } catch (err) {
     res.status(500).json({ message: getErrorMessage(err) })
+  }
+})
+
+router.get('/library', authenticateSession, async (req, res) => {
+  try {
+    const [folderRows] = await db.query<FolderRow[]>('SELECT * FROM folders WHERE users_id = ?', [req.user.id])
+    const [playlistRows] = await db.query<PlaylistRow[]>('SELECT * FROM playlists WHERE users_id = ?', [req.user.id])
+    const [folderPlaylistRows] = await db.query<FolderPlaylistRow[]>('SELECT * FROM folders_has_playlists')
+
+    const folderMap = new Map<number, TempFolder>()
+    const playlistMap = new Map<number, Playlist>()
+
+    // Create folder nodes
+    for (const folder of folderRows) {
+      folderMap.set(folder.id, {
+        type: 'folder',
+        id: folder.id,
+        name: folder.name,
+        description: folder.description,
+        children: [],
+        parentId: folder.parent_folders_id,
+      })
+    }
+
+    // Create playlist nodes
+    for (const playlist of playlistRows) {
+      playlistMap.set(playlist.id, {
+        type: 'playlist',
+        id: playlist.id,
+        name: playlist.name,
+        description: playlist.description,
+      })
+    }
+
+    const rootItems: (TempFolder | Playlist)[] = []
+
+    // Build folder hierarchy
+    for (const folder of folderMap.values()) {
+      if (folder.parentId) {
+        const parent = folderMap.get(folder.parentId)
+
+        if (parent) {
+          parent.children.push(folder)
+        }
+      } else {
+        rootItems.push(folder)
+      }
+    }
+
+    // Track playlists that are assigned to at least one folder
+    const assignedPlaylists = new Set<number>()
+
+    // Add playlists into folders
+    for (const relation of folderPlaylistRows) {
+      const folder = folderMap.get(relation.folders_id)
+      const playlist = playlistMap.get(relation.playlists_id)
+
+      if (!folder || !playlist) continue
+
+      folder.children.push({
+        ...playlist,
+      })
+
+      assignedPlaylists.add(playlist.id)
+    }
+
+    // Root playlists
+    for (const playlist of playlistMap.values()) {
+      if (!assignedPlaylists.has(playlist.id)) {
+        rootItems.push(playlist)
+      }
+    }
+
+    // Remove internal parentId property
+    const clean = (items: any[]) => {
+      for (const item of items) {
+        delete item.parentId
+
+        if (item.type === 'folder') {
+          clean(item.children)
+        }
+      }
+    }
+
+    clean(rootItems)
+
+    res.json(rootItems)
+  } catch (err) {
+    res.status(500).json({
+      message: getErrorMessage(err),
+    })
   }
 })
 

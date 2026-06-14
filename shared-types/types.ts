@@ -18,3 +18,20 @@ export interface DBSong {
   upload_date: Date
   users_id: number
 }
+
+interface LibraryNode {
+  id: number
+  name: string
+  description: string | null
+}
+
+export interface Playlist extends LibraryNode {
+  type: 'playlist'
+}
+
+export interface Folder extends LibraryNode {
+  type: 'folder'
+  children: LibraryItem[]
+}
+
+export type LibraryItem = Folder | Playlist

@@ -1,18 +1,20 @@
 import { CircularProgress, IconButton, InputAdornment, ListItemIcon, Menu, MenuItem, Tooltip } from '@mui/material'
 import * as S from './styles'
 import axios from 'axios'
-import { Logout, Person, Search, Settings } from '@mui/icons-material'
+import { Logout, Person, Search, Settings, Upload } from '@mui/icons-material'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import { useMutation } from '@tanstack/react-query'
+import UploadFiles from '../UploadFiles'
 
 const Header = () => {
   const { t, onUserChange } = useAppContext()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const nav = useNavigate()
   const toast = useToast()
+  const [openUpload, setOpenUpload] = useState(false)
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => axios.post('auth/logout'),
@@ -49,11 +51,21 @@ const Header = () => {
         }}
       />
 
-      <Tooltip title={t('options')}>
-        <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-          <Person />
-        </IconButton>
-      </Tooltip>
+      <S.OptionsBox>
+        <Tooltip title={t('upload')}>
+          <S.UploadButton onClick={() => setOpenUpload(true)}>
+            <Upload />
+          </S.UploadButton>
+        </Tooltip>
+
+        <UploadFiles open={openUpload} onOpenChange={setOpenUpload} />
+
+        <Tooltip title={t('options')}>
+          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+            <Person />
+          </IconButton>
+        </Tooltip>
+      </S.OptionsBox>
 
       <Menu anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleClose}>
         <MenuItem

@@ -39,7 +39,7 @@ const Settings = () => {
   })
 
   return (
-    <S.Container>
+    <>
       <Typography variant='h4'>{t('settings')}</Typography>
 
       <S.StyledPaper variant='outlined'>
@@ -95,7 +95,7 @@ const Settings = () => {
 
         <DeleteDialog />
       </S.StyledPaperRed>
-    </S.Container>
+    </>
   )
 }
 

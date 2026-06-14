@@ -1,17 +1,16 @@
-import { styled } from '@mui/material'
+import { Box, styled } from '@mui/material'
 
-export const Main = styled('div')({
-  width: '100%',
+export const Container = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'space-between',
-})
-
-export const PaddedContent = styled('div')({
-  height: '100%',
+  gap: theme.spacing(2),
   width: '100%',
-  padding: 16,
+}))
+
+export const Grid = styled(Box)(({ theme }) => ({
   display: 'flex',
-  flexDirection: 'column',
-  gap: 16,
-})
+  gap: theme.spacing(2),
+  flexWrap: 'wrap',
+  justifyContent: 'start',
+  width: '100%',
+}))

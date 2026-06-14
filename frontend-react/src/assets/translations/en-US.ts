@@ -90,4 +90,5 @@ export default {
   unmute: 'Unmute',
   duration: 'Duration',
   edit: 'Edit',
+  library: 'Library',
 } satisfies Record<string, string>
