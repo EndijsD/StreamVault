@@ -92,4 +92,5 @@ export default {
   unmute: 'Ieslēgt skaņu',
   duration: 'Ilgums',
   edit: 'Rediģēt',
+  upload_no_files: 'Augšupielādei netika pievienoti faili',
 } satisfies Record<TranslationKey, string>

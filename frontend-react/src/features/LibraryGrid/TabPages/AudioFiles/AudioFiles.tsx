@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react'
 import { columns } from './columns'
 import type { Order } from '../../../../components/DataTable/props'
 import { CircularProgress } from '@mui/material'
+import type { ContextMenuOption } from '../../../../components/DataTable/ContextMenu/props'
+import { usePlayerContext } from '../../../../assets/contexts/PlayerContext/usePlayerContext'
 
 const fetchFiles = async () => {
   return await axios.get<DBSong[]>('/files')
@@ -14,6 +16,7 @@ const fetchFiles = async () => {
 
 const AudioFiles = () => {
   const toast = useToast()
+  const { play } = usePlayerContext()
   const [rows, setRows] = useState<DBSong[]>([])
   const [orderState, setOrderState] = useState<Order<DBSong>>({ orderBy: null, orderDir: null })
 
@@ -26,6 +29,31 @@ const AudioFiles = () => {
     if (data?.data) setRows(data.data)
   }, [data])
 
+  const Options: ContextMenuOption<DBSong>[] = [
+    {
+      label: 'play',
+      action: (all, _, track) => {
+        play({
+          artist: track.artist ?? '',
+          duration: track.duration_s,
+          image: track.image_base64,
+          title: track.title,
+          type: 'song',
+          src: track.id.toString(),
+          playlistRows: all,
+        })
+      },
+    },
+    {
+      label: 'edit',
+      action: () => {},
+    },
+    {
+      label: 'delete',
+      action: () => {},
+    },
+  ]
+
   if (error) toast({ message: 'something_went_wrong', severity: 'error' })
 
   return (
@@ -35,7 +63,13 @@ const AudioFiles = () => {
           <CircularProgress size={60} />
         </div>
       ) : (
-        <DataTable<DBSong> rows={rows} columns={columns} orderState={orderState} setOrderState={setOrderState} />
+        <DataTable<DBSong>
+          options={Options}
+          rows={rows}
+          columns={columns}
+          orderState={orderState}
+          setOrderState={setOrderState}
+        />
       )}
     </>
   )

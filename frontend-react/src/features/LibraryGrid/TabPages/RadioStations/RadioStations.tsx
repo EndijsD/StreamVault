@@ -9,7 +9,15 @@ const RadioStations = () => {
       {RadioStationData.map((el, i) => (
         <PlaylistCard
           onClick={() =>
-            play({ type: 'radio', title: el.name, artist: '', duration: null, src: el.url, image: el.imagePath })
+            play({
+              type: 'radio',
+              title: el.name,
+              artist: '',
+              duration: null,
+              src: el.url,
+              image: el.imagePath,
+              playlistRows: [],
+            })
           }
           data={{ id: i, image: el.imagePath, imageExt: '', name: el.name }}
           key={i}

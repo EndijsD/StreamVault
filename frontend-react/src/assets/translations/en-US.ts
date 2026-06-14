@@ -90,4 +90,5 @@ export default {
   unmute: 'Unmute',
   duration: 'Duration',
   edit: 'Edit',
+  upload_no_files: 'No files were provided to upload',
 } satisfies Record<string, string>

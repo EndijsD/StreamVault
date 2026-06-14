@@ -44,6 +44,7 @@ const UploadFiles = () => {
   const [files, setFiles] = useState<File[]>([])
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { t } = useAppContext()
   const toast = useToast()
   const addFiles = useCallback((incoming: File[]) => {
     const valid = incoming.filter((f) => {
@@ -89,7 +90,7 @@ const UploadFiles = () => {
     return axios.post('/files', formData)
   }
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: postFiles,
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -110,11 +111,19 @@ const UploadFiles = () => {
     setOpen(false)
     setFiles([])
   }
-  const { t } = useAppContext()
+
+  const submit = () => {
+    if (isPending) return
+    if (files.length == 0) {
+      toast({ message: 'upload_no_files', severity: 'warning' })
+      return
+    }
+    mutate()
+  }
 
   return (
     <>
-      <Button variant="contained" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
+      <Button variant='contained' startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
         {t('upload_audio')}
       </Button>
 
@@ -122,15 +131,15 @@ const UploadFiles = () => {
         <S.StyledDialogTitle>
           <S.TitleTop>
             <Box flex={1}>
-              <Typography variant="h6" fontWeight={700} lineHeight={1.2}>
+              <Typography variant='h6' fontWeight={700} lineHeight={1.2}>
                 {t('upload_audio_files')}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 MP3, WAV, OGG, FLAC, AAC · Max {MAX_FILE_SIZE_MB} MB each
               </Typography>
             </Box>
-            <IconButton onClick={handleClose} size="small">
-              <CloseIcon fontSize="small" />
+            <IconButton onClick={handleClose} size='small'>
+              <CloseIcon fontSize='small' />
             </IconButton>
           </S.TitleTop>
           <S.UploadBox
@@ -143,15 +152,15 @@ const UploadFiles = () => {
             <S.UploadBoxContent>
               <CloudUploadIcon sx={{ fontSize: 28, color: '#6C63FF' }} />
             </S.UploadBoxContent>
-            <Box textAlign="center">
-              <Typography fontWeight={600} variant="body1">
+            <Box textAlign='center'>
+              <Typography fontWeight={600} variant='body1'>
                 {t('drop_files_here')}
               </Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.25}>
+              <Typography variant='body2' color='text.secondary' mt={0.25}>
                 {t('or')}{' '}
                 <Typography
-                  component="span"
-                  variant="body2"
+                  component='span'
+                  variant='body2'
                   sx={{ color: '#6C63FF', fontWeight: 600, textDecoration: 'underline' }}
                 >
                   {t('browse_device')}
@@ -160,7 +169,7 @@ const UploadFiles = () => {
             </Box>
             <input
               ref={inputRef}
-              type="file"
+              type='file'
               accept={ACCEPTED_EXTENSIONS}
               multiple
               hidden
@@ -172,7 +181,7 @@ const UploadFiles = () => {
         <DialogContent sx={{ py: 0 }}>
           {files.length > 0 && (
             <Box>
-              <Typography variant="subtitle2" color="text.secondary" mb={1} fontWeight={600}>
+              <Typography variant='subtitle2' color='text.secondary' mb={1} fontWeight={600}>
                 {files.length} {files.length == 1 ? t('file') : t('files')}
               </Typography>
               <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -186,36 +195,36 @@ const UploadFiles = () => {
                       px: 2,
                     }}
                   >
-                    <Box display="flex" alignItems="center" width="100%">
+                    <Box display='flex' alignItems='center' width='100%'>
                       <ListItemIcon sx={{ minWidth: 36 }}>
                         <AudioFileIcon sx={{ color: '#6C63FF', fontSize: 24 }} />
                       </ListItemIcon>
                       <ListItemText
                         primary={
-                          <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 220 }} title={f.name}>
+                          <Typography variant='body2' fontWeight={600} noWrap sx={{ maxWidth: 220 }} title={f.name}>
                             {formatFileName(f.name)}
                           </Typography>
                         }
                         secondary={
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant='caption' color='text.secondary'>
                             {formatBytes(f.size)}
                           </Typography>
                         }
                       />
                       <Chip
                         label={t('ready')}
-                        size="small"
+                        size='small'
                         color={'primary'}
-                        variant="filled"
+                        variant='filled'
                         sx={{ fontSize: 12, height: 24 }}
                       />
                       <IconButton
-                        size="small"
-                        edge="end"
+                        size='small'
+                        edge='end'
                         onClick={() => removeFile(i)}
                         sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
                       >
-                        <DeleteIcon fontSize="small" />
+                        <DeleteIcon fontSize='small' />
                       </IconButton>
                     </Box>
                   </ListItem>
@@ -232,11 +241,11 @@ const UploadFiles = () => {
             gap: 1,
           }}
         >
-          <Button onClick={handleClose} variant="outlined">
+          <Button onClick={handleClose} variant='outlined'>
             {t('cancel')}
           </Button>
 
-          <Button variant="contained" onClick={() => mutate()} startIcon={<CloudUploadIcon />}>
+          <Button variant='contained' loading={isPending} onClick={submit} startIcon={<CloudUploadIcon />}>
             {t('upload')} {files.length > 0 ? `${files.length} ${files.length == 1 ? t('file') : t('files')}` : ''}
           </Button>
         </DialogActions>

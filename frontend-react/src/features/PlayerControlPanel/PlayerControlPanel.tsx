@@ -19,12 +19,15 @@ import { formatTime } from './functions'
 import { usePlayerContext } from '../../assets/contexts/PlayerContext/usePlayerContext'
 
 const PlayerControlPanel = () => {
-  const [prevVolume, setPrevVolume] = useState(70)
-  const [isMuted, setIsMuted] = useState(false)
   const { t } = useAppContext()
   const theme = useTheme()
   const { playerState, playerRef, trackInfo, setPlayerStateValue, changeTrack } = usePlayerContext()
   const { isPlaying, isShuffle, progress, repeatMode, volume } = playerState
+
+  const [prevVolume, setPrevVolume] = useState(70)
+  const [tempProgress, setTempProgress] = useState(progress)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
 
   const handleMuteToggle = useCallback(() => {
     if (isMuted) {
@@ -205,11 +208,19 @@ const PlayerControlPanel = () => {
       <Box>
         <S.StyledSlider
           disabled={isPlayingRadio}
-          value={progress}
+          value={isDragging ? tempProgress : progress}
           max={duration ?? 0}
           valueLabelDisplay='auto'
+          onMouseDown={() => {
+            setIsDragging(true)
+            setTempProgress(progress)
+          }}
+          onMouseUp={() => {
+            setIsDragging(false)
+            setPlayerStateValue('progress', tempProgress)
+          }}
           valueLabelFormat={(v) => formatTime(v)}
-          onChange={(_, v) => setPlayerStateValue('progress', v as number)}
+          onChange={(_, v) => setTempProgress(v as number)}
         />
         <S.SliderLabelBox>
           <S.SmallText variant='caption'>{isPlayingRadio ? '--:--' : formatTime(progress)}</S.SmallText>
