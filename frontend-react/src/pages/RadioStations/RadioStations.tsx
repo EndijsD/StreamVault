@@ -19,6 +19,7 @@ const RadioStations = () => {
               src: el.url,
               image: el.imagePath,
               playlistRows: [],
+              playlistID: 'radio-station',
             })
           }
           data={{ image: el.imagePath, name: el.name, type: 'station' }}
