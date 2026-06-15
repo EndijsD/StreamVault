@@ -27,6 +27,7 @@ export interface TrackInfo {
   src: string | null
   image: string | null
   playlistRows: DBSong[]
+  playlistID: string
 }
 
 const baseURL = import.meta.env.VITE_BACKEND_URL
@@ -40,6 +41,7 @@ export const PlayerProvider = ({ children }: Props) => {
     src: null,
     image: null,
     playlistRows: [],
+    playlistID: '',
   })
   const [shuffled, setShuffled] = useState<DBSong[] | null>(null)
   const [playerState, setPlayerState] = useState<PlayerState>({
@@ -87,7 +89,7 @@ export const PlayerProvider = ({ children }: Props) => {
 
     console.log('next song id', nextSong.id)
 
-    setTrackInfo({
+    setTrackInfo((prev) => ({
       type: 'song',
       title: nextSong.title,
       artist: nextSong.artist ?? '',
@@ -95,7 +97,8 @@ export const PlayerProvider = ({ children }: Props) => {
       src: nextSong.id.toString(),
       image: nextSong.image_base64,
       playlistRows: trackInfo.playlistRows,
-    })
+      playlistID: prev.playlistID,
+    }))
 
     if (playerState.isShuffle && !shuffled) setShuffled(activeList)
   }
@@ -169,7 +172,7 @@ export const PlayerProvider = ({ children }: Props) => {
           dir == 'next' ? (currID == length - 1 ? 0 : currID + 1) : currID == 0 ? length - 1 : currID - 1
         const nextStation = RadioStationData[newTrackID]
         const { imagePath, name, url } = nextStation
-        setTrackInfo({
+        setTrackInfo((prev) => ({
           artist: '',
           duration: null,
           image: imagePath,
@@ -177,7 +180,8 @@ export const PlayerProvider = ({ children }: Props) => {
           title: name,
           type: 'radio',
           playlistRows: [],
-        })
+          playlistID: prev.playlistID,
+        }))
       } else if (trackInfo.type === 'song') playSong(dir)
     },
     [trackInfo, playerState.isShuffle, shuffled],

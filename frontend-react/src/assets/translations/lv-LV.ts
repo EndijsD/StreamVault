@@ -94,4 +94,13 @@ export default {
   edit: 'Rediģēt',
   upload_no_files: 'Augšupielādei netika pievienoti faili',
   library: 'Bibliotēka',
+  invalid_image_file: 'Izvēlētais fails nav attēls',
+  edit_files_description: 'Šeit varat atjaunināt visu informāciju par izvēlētajām dziesmām.',
+  drag_and_drop_image: 'Velciet un nometiet attēlu šeit',
+  files_update_success: 'Faila informācija veiksmīgi atjaunināta',
+  files_update_error: 'Neizdevās atjaunināt faila informāciju',
+  files_delete_success: 'Faili tika veiksmīgi dzēsti',
+  files_delete_error: 'Neizdevās dzēst failus',
+  file_too_large: 'Iesniegtais fails ir pārāk liels!',
+  confirm_delete_description: 'Vai tiešām vēlaties dzēst izvēlētos failus?',
 } satisfies Record<TranslationKey, string>

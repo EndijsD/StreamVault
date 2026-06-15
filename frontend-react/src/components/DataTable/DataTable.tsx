@@ -17,6 +17,9 @@ export const DataTable = <T extends { id: number | string }>({
   orderState,
   setOrderState,
   options,
+  height,
+  onPlayPlaylist,
+  playlistID,
 }: DataTableProps<T>) => {
   const [selected, setSelected] = useState<(number | string)[]>([])
   const [displayType, setDisplayType] = useState<DisplayType>('list')
@@ -54,7 +57,7 @@ export const DataTable = <T extends { id: number | string }>({
 
   const handleContextMenu = (event: MouseEvent<HTMLTableRowElement, globalThis.MouseEvent>, row: T) => {
     event.preventDefault()
-    if (selected.length === 0) handleRowClick(event, row.id)
+    if (selected.length === 0 || !selected.includes(row.id)) handleRowClick(event, row.id)
     setContextMenuState((prev) =>
       prev.open
         ? { open: false, row: null, pos: null }
@@ -82,11 +85,16 @@ export const DataTable = <T extends { id: number | string }>({
           all={rows}
         />
       )}
-      <Box sx={{ width: '100%', height: '100%' }}>
-        <Paper sx={{ width: '100%', height: '100%', overflow: 'auto' }}>
-          <TableToolBar displayType={displayType} setDisplayType={setDisplayType} />
+      <Box sx={{ width: '100%', height: height }}>
+        <Paper sx={{ width: '100%', height: '100%' }}>
+          <TableToolBar
+            playlistID={playlistID}
+            onPlayPlaylist={onPlayPlaylist}
+            displayType={displayType}
+            setDisplayType={setDisplayType}
+          />
 
-          <TableContainer>
+          <TableContainer style={{ overflow: 'auto', height: 'calc(100% - 64px)' }}>
             <Table stickyHeader sx={{ minWidth: 750 }} size={dense ? 'small' : 'medium'}>
               <TableHeader dense={dense} columns={columns} orderState={orderState} onRequestSort={handleRequestSort} />
               <TableBody>

@@ -92,4 +92,13 @@ export default {
   edit: 'Edit',
   upload_no_files: 'No files were provided to upload',
   library: 'Library',
+  invalid_image_file: 'Provided file is not of image type',
+  edit_files_description: 'Here you can update all of your information related to your selected songs.',
+  drag_and_drop_image: 'Drag and drop your image here',
+  files_update_success: 'File information updated successfully',
+  files_update_error: 'File information failed to update',
+  files_delete_success: 'Files were successfully deleted',
+  files_delete_error: 'Failed to delete files',
+  file_too_large: 'Provided file is too large',
+  confirm_delete_description: 'Are you sure you want to delete the selected files?',
 } satisfies Record<string, string>
