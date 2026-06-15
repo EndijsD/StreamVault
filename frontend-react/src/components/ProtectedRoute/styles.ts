@@ -6,13 +6,6 @@ export const Page = styled(Box)({
   flexDirection: 'column',
 })
 
-export const Container = styled(Page)({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  flex: 1,
-})
-
 export const StyledBox = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',

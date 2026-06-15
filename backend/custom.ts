@@ -5,7 +5,7 @@ import type { RowDataPacket } from 'mysql2'
 import db from './db.ts'
 import type { FolderPlaylistRow, FolderRow, PlaylistRow, TempFolder, User } from './types.ts'
 import bcrypt from 'bcrypt'
-import type { Playlist } from '../shared-types/types.ts'
+import type { Folder, Playlist } from '../shared-types/types.ts'
 
 const router = express.Router()
 
@@ -98,7 +98,7 @@ router.get('/library', authenticateSession, async (req, res) => {
         description: folder.description,
         children: [],
         parentId: folder.parent_folders_id,
-        image: null,
+        image: folder.image ? folder.image.toString() : null,
       })
     }
 
@@ -109,7 +109,7 @@ router.get('/library', authenticateSession, async (req, res) => {
         id: playlist.id,
         name: playlist.name,
         description: playlist.description,
-        image: playlist.image,
+        image: playlist.image ? playlist.image.toString() : null,
       })
     }
 
@@ -166,6 +166,138 @@ router.get('/library', authenticateSession, async (req, res) => {
     clean(rootItems)
 
     res.json(rootItems)
+  } catch (err) {
+    res.status(500).json({
+      message: getErrorMessage(err),
+    })
+  }
+})
+
+router.get('/playlist/:id', authenticateSession, async (req, res) => {
+  try {
+    const id = req.params.id
+
+    const [rows] = await db.query<PlaylistRow[]>('SELECT * FROM playlists WHERE id = ?', [id])
+
+    const row = rows.length === 1 ? rows[0] : null
+
+    if (!row) return res.status(404).json({ message: 'Playlist not found' })
+
+    const playlist: Playlist = {
+      type: 'playlist',
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      image: row.image ? row.image.toString() : null,
+    }
+
+    res.json(playlist)
+  } catch (err) {
+    res.status(500).json({ message: getErrorMessage(err) })
+  }
+})
+
+router.post('/folder', authenticateSession, async (req, res) => {
+  try {
+    const { name, description = null, image = null, parentId = null } = req.body
+
+    if (!name?.trim()) {
+      return res.status(400).json({
+        message: 'Name is required',
+      })
+    }
+
+    if (parentId) {
+      const [parents] = await db.query<FolderRow[]>('SELECT id FROM folders WHERE id = ? AND users_id = ?', [
+        parentId,
+        req.user.id,
+      ])
+
+      if (parents.length !== 1) {
+        return res.status(404).json({
+          message: 'Parent folder not found',
+        })
+      }
+    }
+
+    const [result]: any = await db.query(
+      `
+      INSERT INTO folders
+      (name, description, parent_folders_id, users_id, image)
+      VALUES (?, ?, ?, ?, ?)
+      `,
+      [name, description, parentId, req.user.id, image],
+    )
+
+    const folder: Folder = {
+      type: 'folder',
+      id: result.insertId,
+      name,
+      description,
+      image,
+      children: [],
+    }
+
+    res.status(201).json(folder)
+  } catch (err) {
+    res.status(500).json({
+      message: getErrorMessage(err),
+    })
+  }
+})
+
+router.post('/playlist', authenticateSession, async (req, res) => {
+  try {
+    const { name, description = null, image = null, folderId = null } = req.body
+
+    if (!name?.trim()) {
+      return res.status(400).json({
+        message: 'Name is required',
+      })
+    }
+
+    if (folderId) {
+      const [folders] = await db.query<FolderRow[]>('SELECT id FROM folders WHERE id = ? AND users_id = ?', [
+        folderId,
+        req.user.id,
+      ])
+
+      if (folders.length !== 1) {
+        return res.status(404).json({
+          message: 'Folder not found',
+        })
+      }
+    }
+
+    const [result]: any = await db.query(
+      `
+      INSERT INTO playlists
+      (name, description, users_id, image)
+      VALUES (?, ?, ?, ?)
+      `,
+      [name, description, req.user.id, image],
+    )
+
+    if (folderId) {
+      await db.query(
+        `
+        INSERT INTO folders_has_playlists
+        (folders_id, playlists_id)
+        VALUES (?, ?)
+        `,
+        [folderId, result.insertId],
+      )
+    }
+
+    const playlist: Playlist = {
+      type: 'playlist',
+      id: result.insertId,
+      name,
+      description,
+      image,
+    }
+
+    res.status(201).json(playlist)
   } catch (err) {
     res.status(500).json({
       message: getErrorMessage(err),

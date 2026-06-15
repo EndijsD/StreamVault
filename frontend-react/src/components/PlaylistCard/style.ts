@@ -1,4 +1,4 @@
-import { Box, Paper, styled } from '@mui/material'
+import { Paper, styled } from '@mui/material'
 
 export const Main = styled(Paper)(({ theme }) => ({
   position: 'relative',
@@ -46,27 +46,5 @@ export const Main = styled(Paper)(({ theme }) => ({
 
   '&:hover::before': {
     opacity: 1,
-  },
-}))
-
-export const Image = styled('img')({
-  height: 128,
-  width: 128,
-  backgroundColor: 'green',
-})
-
-export const NoImage = styled(Box)(({ theme }) => ({
-  height: 128,
-  width: 128,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  backgroundImage: `linear-gradient(-45deg,${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-  borderRadius: theme.shape.borderRadius,
-  color: theme.palette.primary.contrastText,
-
-  svg: {
-    height: theme.spacing(8),
-    width: theme.spacing(8),
   },
 }))
