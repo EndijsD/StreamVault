@@ -23,16 +23,21 @@ export interface DataTableProps<T extends { id: number | string }> {
   orderState: Order<T>
   setOrderState: Dispatch<SetStateAction<Order<T>>>
   options?: ContextMenuOption<T>[]
+  height: string
+  onPlayPlaylist: () => void
+  playlistID: string
 }
 
 export interface ToolbarProps {
   displayType: DisplayType
   setDisplayType: (displayType: DisplayType) => void
+  onPlayPlaylist: () => void
+  playlistID: string
 }
 
 export interface TableHeadProps<T> {
   columns: ColumnDef<T>[]
   orderState: Order<T>
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof T) => void
-  dense: Boolean
+  dense: boolean
 }

@@ -134,9 +134,11 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
             </Typography>
           </Box>
 
-          <IconButton onClick={handleClose} size='small'>
-            <CloseIcon fontSize='small' />
-          </IconButton>
+          <div>
+            <IconButton onClick={handleClose} size='small'>
+              <CloseIcon fontSize='small' />
+            </IconButton>
+          </div>
         </S.TitleTop>
 
         <S.UploadBox

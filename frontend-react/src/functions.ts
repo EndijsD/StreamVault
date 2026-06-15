@@ -7,9 +7,9 @@ export const formatDate = (value: string | Date) => {
 
 //https://bost.ocks.org/mike/shuffle/
 export const shuffle = (array: DBSong[]) => {
-  var deepCopy = [...array]
-  var copy = [],
-    n = array.length,
+  const deepCopy = [...array]
+  const copy = []
+  let n = array.length,
     i
 
   // While there remain elements to shuffle…
@@ -27,3 +27,11 @@ export const shuffle = (array: DBSong[]) => {
 
   return copy
 }
+
+export const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })

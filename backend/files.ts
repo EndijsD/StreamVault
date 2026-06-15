@@ -9,6 +9,7 @@ import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 import { ZipArchive } from 'archiver'
 import { parseFile } from 'music-metadata'
 import type { DBSong } from '../shared-types/types.ts'
+import { getErrorMessage } from './functions.ts'
 
 const router = express.Router()
 
@@ -135,6 +136,41 @@ router.post('', authenticateSession, upload.array('files'), async (req, res) => 
     uploaded,
     ...(failed > 0 && { warning: `${failed} file(s) failed to move after DB insert` }),
   })
+})
+
+router.patch('/', authenticateSession, async (req, res) => {
+  try {
+    const allowedFields = ['title', 'artist', 'album', 'image_base64']
+
+    const updates = req.body
+    const userId = req.user.id
+
+    const updateIDs = updates.ids
+    const updateData = updates.data
+
+    if (!Array.isArray(updateIDs) || updateIDs.length === 0)
+      return res.status(400).json({ message: 'Invalid updates array' })
+
+    const fields = Object.keys(updateData ?? {}).filter((key) => allowedFields.includes(key))
+
+    if (fields.length === 0) return res.status(400).json({ message: 'No valid updates' })
+
+    const columnSetters = fields.map((field) => `${field} = ?`).join(', ')
+    const values = fields.map((field) => updateData[field])
+
+    const queries = updateIDs.map((id) => ({
+      sql: `UPDATE songs SET ${columnSetters} WHERE id = ? and users_id = ?`,
+      values: [...values, id, userId],
+    }))
+
+    await Promise.all(queries.map((q) => db.query(q.sql, q.values)))
+
+    res.json({
+      message: 'Updated entries successfully',
+    })
+  } catch (err) {
+    res.status(500).json({ message: getErrorMessage(err) })
+  }
 })
 
 router.get('/download', authenticateSession, async (req, res) => {

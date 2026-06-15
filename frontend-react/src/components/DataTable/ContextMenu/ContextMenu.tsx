@@ -15,7 +15,6 @@ const ContextMenu = <T extends { id: number | string }>({
 
   return (
     <Menu
-      id='long-menu'
       anchorReference='anchorPosition'
       anchorPosition={anchorPosition}
       anchorOrigin={{
@@ -26,7 +25,7 @@ const ContextMenu = <T extends { id: number | string }>({
         vertical: 'top',
         horizontal: 'left',
       }}
-      open={!!anchorPosition}
+      open={Boolean(anchorPosition)}
       onClose={handleClose}
     >
       {options.map((option, i) => (

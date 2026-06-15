@@ -9,17 +9,23 @@ import type { Order } from '../../components/DataTable/props'
 import { CircularProgress } from '@mui/material'
 import type { ContextMenuOption } from '../../components/DataTable/ContextMenu/props'
 import { usePlayerContext } from '../../assets/contexts/PlayerContext/usePlayerContext'
+import EditRowsDialog from '../../features/AudioFiles/EditRowsDialog'
+import ConfirmDelete from '../../features/AudioFiles/ConfirmDelete'
 
 const fetch = async () => {
   const res = await axios.get<DBSong[]>('/files')
   return res.data
 }
 
+type DialogState = { type: 'edit'; open: boolean; rows: DBSong[] } | { type: 'delete'; open: boolean; rows: number[] }
+
+const initData: DialogState = { type: 'edit', open: false, rows: [] }
+
 const AudioFiles = () => {
   const toast = useToast()
   const { play } = usePlayerContext()
   const [orderState, setOrderState] = useState<Order<DBSong>>({ orderBy: null, orderDir: null })
-
+  const [dialogState, setDialogState] = useState<DialogState>(initData)
   const { error, data, isPending } = useQuery({
     queryKey: ['songs'],
     queryFn: fetch,
@@ -39,20 +45,40 @@ const AudioFiles = () => {
           type: 'song',
           src: track.id.toString(),
           playlistRows: all,
+          playlistID: 'all_files',
         })
       },
     },
     {
       label: 'edit',
-      action: () => {},
+      action: (_, selectedRows) => {
+        setDialogState({ type: 'edit', open: true, rows: selectedRows })
+      },
     },
     {
       label: 'delete',
-      action: () => {},
+      action: (_, selectedRows) => {
+        setDialogState({ type: 'delete', open: true, rows: selectedRows.map((el) => el.id) })
+      },
     },
   ]
 
   if (error) toast({ message: 'something_went_wrong', severity: 'error' })
+
+  const handlePlayPlaylist = () => {
+    if (!rows) return
+    const track = rows[0]
+    play({
+      artist: track.artist ?? '',
+      duration: track.duration_s,
+      image: track.image_base64,
+      title: track.title,
+      type: 'song',
+      src: track.id.toString(),
+      playlistRows: rows,
+      playlistID: 'all_files',
+    })
+  }
 
   return (
     <>
@@ -62,12 +88,21 @@ const AudioFiles = () => {
         </div>
       ) : (
         <DataTable<DBSong>
+          onPlayPlaylist={handlePlayPlaylist}
           options={Options}
           rows={rows}
           columns={columns}
           orderState={orderState}
           setOrderState={setOrderState}
+          height='calc(100% - 96px)'
+          playlistID='all_files'
         />
+      )}
+
+      {dialogState.type == 'delete' ? (
+        <ConfirmDelete open={dialogState.open} setOpen={() => setDialogState(initData)} songIds={dialogState.rows} />
+      ) : (
+        <EditRowsDialog open={dialogState.open} setOpen={() => setDialogState(initData)} rows={dialogState.rows} />
       )}
     </>
   )
