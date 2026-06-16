@@ -1,4 +1,4 @@
-import { WarningAmber } from '@mui/icons-material'
+import { Info } from '@mui/icons-material'
 import { Box, Link, Paper, styled, Typography } from '@mui/material'
 
 export const Content = styled(Box)({
@@ -14,17 +14,14 @@ export const StyledPaper = styled(Paper)(({ theme }) => ({
   flexDirection: 'column',
   alignItems: 'center',
   borderRadius: '30% / 100%',
-  background: `radial-gradient(${theme.palette.primary.main} 10%, ${theme.palette.secondary.main} 300%)`,
-  gap: theme.spacing(2),
+  gap: theme.spacing(1),
   padding: `${theme.spacing(6)} ${theme.spacing(12)}`,
   width: '100%',
   maxWidth: 500,
 }))
 
 export const Title = styled(Typography)(({ theme }) => ({
-  color: theme.palette.primary.contrastText,
-  fontWeight: theme.typography.fontWeightBold,
-  textShadow: `1px 1px 2px ${theme.palette.grey[900]}`,
+  fontWeight: theme.typography.fontWeightMedium,
   fontSize: 'clamp(1rem, 4vw, 2rem)',
 }))
 
@@ -33,7 +30,11 @@ export const StyledLink = styled(Link)(({ theme }) => ({
   color: theme.palette.primary.contrastText,
 }))
 
-export const StyledWarning = styled(WarningAmber)(({ theme }) => ({
-  color: theme.palette.primary.contrastText,
+export const StyledIcon = styled(Info)(({ theme }) => ({
+  color: theme.palette.warning.main,
   fontSize: theme.typography.h3.fontSize,
+}))
+
+export const Description = styled(Typography)(({ theme }) => ({
+  color: theme.palette.text.secondary,
 }))

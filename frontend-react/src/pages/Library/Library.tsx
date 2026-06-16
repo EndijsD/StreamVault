@@ -13,6 +13,8 @@ import CustomImage from '../../components/CustomImage'
 import { Add } from '@mui/icons-material'
 import ContextMenu from '../../features/library/ContextMenu'
 import type { ContextMenuOpen } from '../../features/library/ContextMenu/types'
+import Loader from '../../components/Loader'
+import Empty from '../Empty'
 
 const fetch = async () => {
   const res = await axios.get<LibraryItem[]>('custom/library')
@@ -47,10 +49,12 @@ const Library = () => {
   const [menu, setMenu] = useState<ContextMenuOpen>(null)
   const [item, setItem] = useState<LibraryItem | null>(null)
 
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: ['library'],
     queryFn: fetch,
   })
+
+  if (isPending) return <Loader />
 
   const library = data || []
 
@@ -134,43 +138,50 @@ const Library = () => {
         </>
       )}
 
-      <S.Section
-        onContextMenu={(e) => {
-          e.preventDefault()
+      {!itemsToDisplay.length ? (
+        <Empty
+          title={currentFolderId ? 'empty_folder_title' : 'empty_library_title'}
+          description={currentFolderId ? 'empty_folder_description' : 'empty_library_description'}
+        />
+      ) : (
+        <S.Section
+          onContextMenu={(e) => {
+            e.preventDefault()
 
-          setMenu({
-            anchorReference: 'anchorPosition',
-            anchorPosition: {
-              left: e.clientX,
-              top: e.clientY,
-            },
-          })
-          setItem(null)
-        }}
-      >
-        <S.Grid>
-          {itemsToDisplay.map((el, i) => (
-            <PlaylistCard
-              data={el}
-              key={i}
-              onClick={() => nav(`/library/${el.type}/${el.id}`)}
-              onContextMenu={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
+            setMenu({
+              anchorReference: 'anchorPosition',
+              anchorPosition: {
+                left: e.clientX,
+                top: e.clientY,
+              },
+            })
+            setItem(null)
+          }}
+        >
+          <S.Grid>
+            {itemsToDisplay.map((el, i) => (
+              <PlaylistCard
+                data={el}
+                key={i}
+                onClick={() => nav(`/library/${el.type}/${el.id}`)}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
 
-                setItem(el)
-                setMenu({
-                  anchorReference: 'anchorPosition',
-                  anchorPosition: {
-                    left: e.clientX,
-                    top: e.clientY,
-                  },
-                })
-              }}
-            />
-          ))}
-        </S.Grid>
-      </S.Section>
+                  setItem(el)
+                  setMenu({
+                    anchorReference: 'anchorPosition',
+                    anchorPosition: {
+                      left: e.clientX,
+                      top: e.clientY,
+                    },
+                  })
+                }}
+              />
+            ))}
+          </S.Grid>
+        </S.Section>
+      )}
 
       <ContextMenu anchor={menu} onClose={() => setMenu(null)} parentId={currentFolderId} item={item} />
     </S.Container>

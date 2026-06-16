@@ -1,4 +1,4 @@
-import type { LibraryType } from '../../../../shared-types/types'
+import type { ItemType } from '../../../../shared-types/types'
 
 export interface PlaylistFolderEditForm {
   id: number
@@ -13,5 +13,5 @@ export interface Props {
   open: Focus | false
   onOpenChange: (open: boolean) => void
   item: PlaylistFolderEditForm
-  type: Exclude<LibraryType, 'station'>
+  type: Extract<ItemType, 'playlist' | 'folder'>
 }

@@ -1,9 +1,9 @@
-import type { LibraryItem, LibraryType } from '../../../../shared-types/types'
+import type { LibraryItem } from '../../../../shared-types/types'
 
 export const updateLibraryItem = (
   items: LibraryItem[],
   id: number,
-  type: LibraryType,
+  type: LibraryItem['type'],
   updates: Pick<LibraryItem, 'name' | 'description' | 'image'>,
 ): LibraryItem[] => {
   return items.map((item) => {

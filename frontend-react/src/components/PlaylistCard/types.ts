@@ -1,4 +1,4 @@
-import type { LibraryItem } from '../../../../shared-types/types'
+import type { LibraryItem, Music } from '../../../../shared-types/types'
 
 interface Station {
   type: 'station'
@@ -7,7 +7,7 @@ interface Station {
 }
 
 export interface Props {
-  data: LibraryItem | Station
+  data: LibraryItem | Station | Music
   onClick?: () => void
   onContextMenu?: (e: React.MouseEvent) => void
 }

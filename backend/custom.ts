@@ -1,11 +1,10 @@
 import express from 'express'
 import { authenticateSession } from './auth.ts'
 import { getErrorMessage } from './functions.ts'
-import type { RowDataPacket } from 'mysql2'
 import db from './db.ts'
-import type { FolderPlaylistRow, FolderRow, PlaylistRow, TempFolder, User } from './types.ts'
+import type { FolderPlaylistRow, FolderRow, PlaylistRow, SongRow, TempFolder, UserRow } from './types.ts'
 import bcrypt from 'bcrypt'
-import type { Folder, Playlist } from '../shared-types/types.ts'
+import type { Folder, Music, Playlist, SearchResult } from '../shared-types/types.ts'
 
 const router = express.Router()
 
@@ -13,12 +12,12 @@ router.post('/change-email', authenticateSession, async (req, res) => {
   try {
     const { email: newEmail, password } = req.body
 
-    const [rows] = await db.query<RowDataPacket[]>(`SELECT * FROM users WHERE email = ?`, [req.user.email])
+    const [rows] = await db.query<UserRow[]>(`SELECT * FROM users WHERE email = ?`, [req.user.email])
 
     if (rows.length < 1) return res.status(403).json({ message: 'Invalid credentials' })
     if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
 
-    const user = rows[0] as User
+    const user = rows[0]
 
     const isCorrectPass = bcrypt.compareSync(password, user.password)
 
@@ -36,12 +35,12 @@ router.post('/change-password', authenticateSession, async (req, res) => {
   try {
     const { newPassword, password } = req.body
 
-    const [rows] = await db.query<RowDataPacket[]>(`SELECT * FROM users WHERE email = ?`, [req.user.email])
+    const [rows] = await db.query<UserRow[]>(`SELECT * FROM users WHERE email = ?`, [req.user.email])
 
     if (rows.length < 1) return res.status(403).json({ message: 'Invalid credentials' })
     if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
 
-    const user = rows[0] as User
+    const user = rows[0]
 
     const isCorrectPass = bcrypt.compareSync(password, user.password)
 
@@ -61,12 +60,12 @@ router.delete('/account', authenticateSession, async (req, res) => {
   try {
     const { password } = req.body
 
-    const [rows] = await db.query<RowDataPacket[]>(`SELECT * FROM users WHERE email = ?`, [req.user.email])
+    const [rows] = await db.query<UserRow[]>(`SELECT * FROM users WHERE email = ?`, [req.user.email])
 
     if (rows.length < 1) return res.status(403).json({ message: 'Invalid credentials' })
     if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
 
-    const user = rows[0] as User
+    const user = rows[0]
 
     const isCorrectPass = bcrypt.compareSync(password, user.password)
 
@@ -500,6 +499,105 @@ router.delete('/folder', authenticateSession, async (req, res) => {
     })
   } finally {
     connection.release()
+  }
+})
+
+router.get('/search', authenticateSession, async (req, res) => {
+  try {
+    const query = String(req.query.query || '').trim()
+
+    if (!query) {
+      return res.json({
+        songs: [],
+        playlists: [],
+        folders: [],
+      })
+    }
+
+    const search = `%${query}%`
+
+    const [songRows] = await db.query<SongRow[]>(
+      `
+      SELECT *
+      FROM songs
+      WHERE users_id = ?
+      AND (
+        title LIKE ?
+        OR album LIKE ?
+        OR artist LIKE ?
+      )
+      LIMIT 25
+      `,
+      [req.user.id, search, search, search],
+    )
+
+    const [playlistRows] = await db.query<PlaylistRow[]>(
+      `
+      SELECT *
+      FROM playlists
+      WHERE users_id = ?
+      AND (
+        name LIKE ?
+        OR description LIKE ?
+      )
+      LIMIT 25
+      `,
+      [req.user.id, search, search],
+    )
+
+    const [folderRows] = await db.query<FolderRow[]>(
+      `
+      SELECT *
+      FROM folders
+      WHERE users_id = ?
+      AND (
+        name LIKE ?
+        OR description LIKE ?
+      )
+      LIMIT 25
+      `,
+      [req.user.id, search, search],
+    )
+
+    const music: Music[] = songRows.map((row) => ({
+      type: 'music',
+      id: row.id,
+      title: row.title,
+      album: row.album,
+      artist: row.artist,
+      duration: row.duration_s,
+      image: row.image ? row.image.toString() : null,
+      uploadDate: new Date(row.upload_date),
+    }))
+
+    const playlists: Playlist[] = playlistRows.map((row) => ({
+      type: 'playlist',
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      image: row.image ? row.image.toString() : null,
+    }))
+
+    const folders: Folder[] = folderRows.map((row) => ({
+      type: 'folder',
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      image: row.image ? row.image.toString() : null,
+      children: [],
+    }))
+
+    const result: SearchResult = {
+      music,
+      playlists,
+      folders,
+    }
+
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({
+      message: getErrorMessage(err),
+    })
   }
 })
 

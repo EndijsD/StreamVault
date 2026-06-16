@@ -22,12 +22,12 @@ export type PlayerState = {
 export interface TrackInfo {
   type: 'radio' | 'song' | null
   title: string
-  artist: string
-  duration: number | null
-  src: string | null
-  image: string | null
-  playlistRows: DBSong[]
-  playlistID: string
+  artist?: string | null
+  duration?: number | null
+  src: string
+  image?: string | null
+  playlistRows?: DBSong[]
+  playlistID?: string
 }
 
 const baseURL = import.meta.env.VITE_BACKEND_URL
@@ -38,7 +38,7 @@ export const PlayerProvider = ({ children }: Props) => {
     artist: '',
     title: '',
     duration: null,
-    src: null,
+    src: '',
     image: null,
     playlistRows: [],
     playlistID: '',
@@ -65,10 +65,11 @@ export const PlayerProvider = ({ children }: Props) => {
   //Creates a new shuffled list when new play session is called
   const play = (data: TrackInfo) => {
     setTrackInfo(data)
-    setShuffled(shuffle(data.playlistRows))
+    if (data.playlistRows) setShuffled(shuffle(data.playlistRows))
   }
 
   const playSong = (dir: 'next' | 'prev') => {
+    if (!trackInfo.playlistRows) return
     if (trackInfo.type !== 'song' || trackInfo.playlistRows.length === 0) return
 
     const activeList = playerState.isShuffle ? (shuffled ?? shuffle(trackInfo.playlistRows)) : trackInfo.playlistRows
@@ -121,6 +122,12 @@ export const PlayerProvider = ({ children }: Props) => {
     if (!Player) return
     const { playlistRows, src } = trackInfo
     if (playlistRows && src) {
+      if (!trackInfo.playlistRows) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setShuffled(null)
+        return
+      }
+
       const currentItem = trackInfo.playlistRows.find((el) => String(el.id) === src)!
       setShuffled([currentItem, ...shuffle(trackInfo.playlistRows).filter((el) => String(el.id) !== src)])
     }
@@ -195,7 +202,7 @@ export const PlayerProvider = ({ children }: Props) => {
 
     navigator.mediaSession.metadata = new MediaMetadata({
       title: trackInfo.title,
-      artist: trackInfo.artist,
+      artist: trackInfo.artist ?? undefined,
       artwork: [
         { src: trackInfo.image ?? '', sizes: '96x96' },
         { src: trackInfo.image ?? '', sizes: '128x128' },
@@ -252,11 +259,13 @@ export const PlayerProvider = ({ children }: Props) => {
     const onTimeUpdate = () => setPlayerState((prev) => ({ ...prev, progress: audio.currentTime }))
     const onLoadedMetadata = () => setPlayerState((prev) => ({ ...prev, duration: audio.duration }))
     const onEnded = () => {
-      if (playerState.repeatMode === 'one') {
+      if (playerState.repeatMode === 'one' || (!trackInfo.playlistRows && playerState.repeatMode === 'all')) {
         audio.currentTime = 0
         audio.play()
         return
       }
+
+      if (!trackInfo.playlistRows) return
 
       const activeList = playerState.isShuffle ? (shuffled ?? trackInfo.playlistRows) : trackInfo.playlistRows
       const currIndex = activeList.findIndex((el) => el.id.toString() === trackInfo.src)

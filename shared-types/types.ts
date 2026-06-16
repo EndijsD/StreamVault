@@ -19,23 +19,26 @@ export interface DBSong {
   users_id: number
 }
 
-export type LibraryType = 'playlist' | 'folder' | 'station'
+export type ItemType = 'playlist' | 'folder' | 'station' | 'music'
+
+export interface Music {
+  type: Extract<ItemType, 'music'>
+  id: number
+  title: string
+  album: string | null
+  artist: string | null
+  duration: number
+  image: string | null
+  uploadDate: Date
+}
 
 interface LibraryNode {
   id: number
   name: string
   description: string | null
   image: string | null
-  type: LibraryType
+  type: ItemType
 }
-
-// export const LibraryType = {
-//   PLAYLIST: 'playlist',
-//   FOLDER: 'folder',
-//   STATION: 'station',
-// } as const
-
-// export type LibraryType = keyof typeof LibraryType
 
 export interface Playlist extends LibraryNode {
   type: 'playlist'
@@ -47,3 +50,9 @@ export interface Folder extends LibraryNode {
 }
 
 export type LibraryItem = Folder | Playlist
+
+export interface SearchResult {
+  music: Music[]
+  playlists: Playlist[]
+  folders: Folder[]
+}
