@@ -305,4 +305,202 @@ router.post('/playlist', authenticateSession, async (req, res) => {
   }
 })
 
+router.delete('/playlist', authenticateSession, async (req, res) => {
+  const connection = await db.getConnection()
+
+  try {
+    await connection.beginTransaction()
+
+    const { playlistId, folderId } = req.body
+
+    const [playlists] = await connection.query<PlaylistRow[]>(
+      `
+      SELECT *
+      FROM playlists
+      WHERE id = ?
+      AND users_id = ?
+      `,
+      [playlistId, req.user.id],
+    )
+
+    if (playlists.length !== 1) {
+      await connection.rollback()
+      return res.status(404).json({
+        message: 'Playlist not found',
+      })
+    }
+
+    const [relations] = await connection.query<FolderPlaylistRow[]>(
+      `
+      SELECT *
+      FROM folders_has_playlists
+      WHERE playlists_id = ?
+      `,
+      [playlistId],
+    )
+
+    // deleting from root
+    if (!folderId) {
+      if (relations.length > 0) {
+        await connection.rollback()
+        return res.status(400).json({
+          message: 'Playlist is linked to folders',
+        })
+      }
+
+      await connection.query(
+        `
+        DELETE FROM playlists
+        WHERE id = ?
+        `,
+        [playlistId],
+      )
+
+      await connection.commit()
+
+      return res.json({
+        deletedPlaylist: true,
+      })
+    }
+
+    await connection.query(
+      `
+      DELETE FROM folders_has_playlists
+      WHERE folders_id = ?
+      AND playlists_id = ?
+      `,
+      [folderId, playlistId],
+    )
+
+    if (relations.length <= 1) {
+      await connection.query(
+        `
+        DELETE FROM playlists
+        WHERE id = ?
+        `,
+        [playlistId],
+      )
+    }
+
+    await connection.commit()
+
+    res.json({
+      deletedPlaylist: relations.length <= 1,
+    })
+  } catch (err) {
+    await connection.rollback()
+
+    res.status(500).json({
+      message: getErrorMessage(err),
+    })
+  } finally {
+    connection.release()
+  }
+})
+
+const getFolderIds = (folders: FolderRow[], rootId: number): number[] => {
+  const ids = [rootId]
+
+  for (const folder of folders) {
+    if (folder.parent_folders_id === rootId) {
+      ids.push(...getFolderIds(folders, folder.id))
+    }
+  }
+
+  return ids
+}
+
+router.delete('/folder', authenticateSession, async (req, res) => {
+  const connection = await db.getConnection()
+
+  try {
+    await connection.beginTransaction()
+
+    const { folderId } = req.body
+
+    const [folders] = await connection.query<FolderRow[]>(
+      `
+      SELECT *
+      FROM folders
+      WHERE users_id = ?
+      `,
+      [req.user.id],
+    )
+
+    const rootFolder = folders.find((f) => f.id === folderId)
+
+    if (!rootFolder) {
+      await connection.rollback()
+
+      return res.status(404).json({
+        message: 'Folder not found',
+      })
+    }
+
+    const folderIds = getFolderIds(folders, folderId)
+
+    const [relations] = await connection.query<FolderPlaylistRow[]>(
+      `
+      SELECT *
+      FROM folders_has_playlists
+      WHERE folders_id IN (?)
+      `,
+      [folderIds],
+    )
+
+    const affectedPlaylistIds = [...new Set(relations.map((r) => r.playlists_id))]
+
+    await connection.query(
+      `
+      DELETE FROM folders_has_playlists
+      WHERE folders_id IN (?)
+      `,
+      [folderIds],
+    )
+
+    for (const playlistId of affectedPlaylistIds) {
+      const [remaining] = await connection.query<FolderPlaylistRow[]>(
+        `
+        SELECT *
+        FROM folders_has_playlists
+        WHERE playlists_id = ?
+        `,
+        [playlistId],
+      )
+
+      if (remaining.length === 0) {
+        await connection.query(
+          `
+          DELETE FROM playlists
+          WHERE id = ?
+          `,
+          [playlistId],
+        )
+      }
+    }
+
+    await connection.query(
+      `
+      DELETE FROM folders
+      WHERE id IN (?)
+      `,
+      [folderIds],
+    )
+
+    await connection.commit()
+
+    res.json({
+      deletedFolderIds: folderIds,
+    })
+  } catch (err) {
+    await connection.rollback()
+
+    res.status(500).json({
+      message: getErrorMessage(err),
+    })
+  } finally {
+    connection.release()
+  }
+})
+
 export default router

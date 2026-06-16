@@ -9,4 +9,5 @@ interface Station {
 export interface Props {
   data: LibraryItem | Station
   onClick?: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }

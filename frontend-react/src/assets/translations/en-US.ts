@@ -122,4 +122,12 @@ export default {
   create: 'Create',
   playlist: 'Playlist',
   folder: 'Folder',
+  delete_playlist: 'Delete playlist',
+  delete_playlist_confirmation: 'Are you sure you want to delete {name} playlist? This action is irreversible.',
+  delete_folder: 'Delete folder',
+  delete_folder_confirmation: 'Are you sure you want to delete {name} folder? This action is irreversible.',
+  delete_playlist_success: 'Playlist deleted successfully',
+  delete_playlist_error: 'Failed to delete playlist',
+  delete_folder_success: 'Folder deleted successfully',
+  delete_folder_error: 'Failed to delete folder',
 } satisfies Record<string, string>

@@ -81,9 +81,11 @@ const EditLibraryItemDialog = ({ item, onOpenChange, open, type }: Props) => {
 
   return (
     <Dialog open={!!open} onClose={() => onOpenChange(false)}>
-      <DialogTitle>{type === 'playlist' ? t('edit_playlist') : t('edit_folder')}</DialogTitle>
+      <DialogTitle>
+        {type === 'playlist' ? t('edit_playlist') : t('edit_folder')}
 
-      <DialogClose onClick={onOpenChange} />
+        <DialogClose onClick={onOpenChange} />
+      </DialogTitle>
 
       <S.StyledDialogContent>
         <CustomImage

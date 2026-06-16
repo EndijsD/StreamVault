@@ -4,15 +4,15 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import type { Folder, LibraryItem } from '../../../../shared-types/types'
 import { useNavigate, useParams } from 'react-router'
-import { Breadcrumbs, Button, Link, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material'
+import { Breadcrumbs, Button, Link, Typography } from '@mui/material'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
 import EditLibraryItemDialog from '../../features/EditLibraryItemDialog'
 import { useState } from 'react'
 import type { Focus } from '../../features/EditLibraryItemDialog/types'
 import CustomImage from '../../components/CustomImage'
-import AddLibraryItemDialog from '../../features/AddLibraryItemDialog'
-import type { AddType } from '../../features/AddLibraryItemDialog/types'
-import { Add, CreateNewFolder, PlaylistAdd } from '@mui/icons-material'
+import { Add } from '@mui/icons-material'
+import ContextMenu from '../../features/library/ContextMenu'
+import type { ContextMenuOpen } from '../../features/library/ContextMenu/types'
 
 const fetch = async () => {
   const res = await axios.get<LibraryItem[]>('custom/library')
@@ -41,12 +41,11 @@ const findFolderPath = (items: LibraryItem[], folderId: number, path: Folder[] =
 
 const Library = () => {
   const [openEdit, setOpenEdit] = useState<Focus | false>(false)
-  const [openAdd, setOpenAdd] = useState(false)
-  const [openAddType, setOpenAddType] = useState<AddType>('playlist')
   const { id } = useParams()
   const nav = useNavigate()
   const { t } = useAppContext()
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [menu, setMenu] = useState<ContextMenuOpen>(null)
+  const [item, setItem] = useState<LibraryItem | null>(null)
 
   const { data } = useQuery({
     queryKey: ['library'],
@@ -62,8 +61,6 @@ const Library = () => {
   const currentFolder = breadcrumbs.at(-1)
 
   const itemsToDisplay = currentFolderId ? (currentFolder?.children ?? []) : library
-
-  const handleClose = () => setAnchorEl(null)
 
   return (
     <S.Container>
@@ -99,36 +96,18 @@ const Library = () => {
           })}
         </Breadcrumbs>
 
-        <Button variant='outlined' onClick={(e) => setAnchorEl(e.currentTarget)} startIcon={<Add />}>
+        <Button
+          variant='outlined'
+          startIcon={<Add />}
+          onClick={(e) =>
+            setMenu({
+              anchorReference: 'anchorEl',
+              anchorEl: e.currentTarget,
+            })
+          }
+        >
           {t('create')}
         </Button>
-
-        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-          <MenuItem
-            onClick={() => {
-              setOpenAdd(true)
-              setOpenAddType('playlist')
-              handleClose()
-            }}
-          >
-            <ListItemIcon>
-              <PlaylistAdd fontSize='small' />
-            </ListItemIcon>
-            <ListItemText>{t('playlist')}</ListItemText>
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              setOpenAdd(true)
-              setOpenAddType('folder')
-              handleClose()
-            }}
-          >
-            <ListItemIcon>
-              <CreateNewFolder fontSize='small' />
-            </ListItemIcon>
-            <ListItemText>{t('folder')}</ListItemText>
-          </MenuItem>
-        </Menu>
       </S.SpaceBetween>
 
       {currentFolder && (
@@ -155,15 +134,45 @@ const Library = () => {
         </>
       )}
 
-      <S.Section>
+      <S.Section
+        onContextMenu={(e) => {
+          e.preventDefault()
+
+          setMenu({
+            anchorReference: 'anchorPosition',
+            anchorPosition: {
+              left: e.clientX,
+              top: e.clientY,
+            },
+          })
+          setItem(null)
+        }}
+      >
         <S.Grid>
           {itemsToDisplay.map((el, i) => (
-            <PlaylistCard data={el} key={i} onClick={() => nav(`/library/${el.type}/${el.id}`)} />
+            <PlaylistCard
+              data={el}
+              key={i}
+              onClick={() => nav(`/library/${el.type}/${el.id}`)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+
+                setItem(el)
+                setMenu({
+                  anchorReference: 'anchorPosition',
+                  anchorPosition: {
+                    left: e.clientX,
+                    top: e.clientY,
+                  },
+                })
+              }}
+            />
           ))}
         </S.Grid>
       </S.Section>
 
-      <AddLibraryItemDialog onOpenChange={setOpenAdd} open={openAdd} type={openAddType} parentId={currentFolderId} />
+      <ContextMenu anchor={menu} onClose={() => setMenu(null)} parentId={currentFolderId} item={item} />
     </S.Container>
   )
 }

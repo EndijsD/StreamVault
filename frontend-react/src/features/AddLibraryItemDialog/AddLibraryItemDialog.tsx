@@ -93,9 +93,11 @@ const AddLibraryItemDialog = ({ onOpenChange, open, type, parentId }: Props) => 
 
   return (
     <Dialog open={!!open} onClose={() => onOpenChange(false)}>
-      <DialogTitle>{type === 'playlist' ? t('create_playlist') : t('create_folder')}</DialogTitle>
+      <DialogTitle>
+        {type === 'playlist' ? t('create_playlist') : t('create_folder')}
 
-      <DialogClose onClick={onOpenChange} />
+        <DialogClose onClick={onOpenChange} />
+      </DialogTitle>
 
       <S.StyledDialogContent>
         <CustomImage type={type} size={188} image={form.image} onImageChange={(image) => setForm({ ...form, image })} />
