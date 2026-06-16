@@ -1,10 +1,10 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, type ReactElement } from 'react'
 import type { TranslationKey } from '../../translations'
 import type { OverridableStringUnion } from '@mui/types'
 import type { AlertColor, AlertPropsColorOverrides } from '@mui/material'
 
 export interface ToastOptions {
-  message: TranslationKey
+  message: TranslationKey | ReactElement
   severity?: OverridableStringUnion<AlertColor, AlertPropsColorOverrides>
 }
 

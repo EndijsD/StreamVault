@@ -87,8 +87,6 @@ export const PlayerProvider = ({ children }: Props) => {
 
     const nextSong = activeList[newIndex]
 
-    console.log('next song id', nextSong.id)
-
     setTrackInfo((prev) => ({
       type: 'song',
       title: nextSong.title,
@@ -245,10 +243,6 @@ export const PlayerProvider = ({ children }: Props) => {
       navigator.mediaSession.setActionHandler('seekto', null)
     }
   }, [changeTrack])
-
-  useEffect(() => {
-    console.log('shuffled', shuffled)
-  }, [shuffled])
 
   //Handles setting actual player progress from audio tag state
   useEffect(() => {

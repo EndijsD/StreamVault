@@ -20,7 +20,6 @@ export const Title = styled(Typography)(({ theme }) => ({
         ${theme.palette.primary.main},
         ${theme.palette.secondary.main} 90%
       )`,
-  filter: `drop-shadow(0 0 4px ${theme.palette.grey[200]})`,
 }))
 
 export const ButtonBox = styled(Box)(({ theme }) => ({

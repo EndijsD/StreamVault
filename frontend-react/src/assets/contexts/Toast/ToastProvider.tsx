@@ -34,7 +34,7 @@ export const ToastProvider = ({ children }: Props) => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert onClose={handleClose} severity={toastState?.severity}>
-          {toastState?.message && t(toastState.message)}
+          {toastState?.message && (typeof toastState.message === 'string' ? t(toastState.message) : toastState.message)}
         </Alert>
       </Snackbar>
     </ToastContext.Provider>

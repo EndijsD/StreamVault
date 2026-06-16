@@ -19,12 +19,23 @@ export interface DBSong {
   users_id: number
 }
 
+export type LibraryType = 'playlist' | 'folder' | 'station'
+
 interface LibraryNode {
   id: number
   name: string
   description: string | null
   image: string | null
+  type: LibraryType
 }
+
+// export const LibraryType = {
+//   PLAYLIST: 'playlist',
+//   FOLDER: 'folder',
+//   STATION: 'station',
+// } as const
+
+// export type LibraryType = keyof typeof LibraryType
 
 export interface Playlist extends LibraryNode {
   type: 'playlist'

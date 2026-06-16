@@ -1,14 +1,14 @@
 import { Typography } from '@mui/material'
 import * as S from './style'
 import type { Props } from './types'
-import { Folder, LibraryMusic } from '@mui/icons-material'
+import CustomImage from '../CustomImage'
 
 const PlaylistCard = ({ data, onClick }: Props) => {
   const { name, type, image } = data
 
   return (
     <S.Main onClick={onClick}>
-      {image ? <S.Image src={image} /> : <S.NoImage>{type === 'playlist' ? <LibraryMusic /> : <Folder />}</S.NoImage>}
+      <CustomImage type={type} size={128} image={image} />
 
       <Typography variant='subtitle2'>{name}</Typography>
     </S.Main>
