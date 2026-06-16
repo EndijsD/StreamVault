@@ -124,4 +124,12 @@ export default {
   create: 'Izveidot',
   playlist: 'Atskaņošanas saraksts',
   folder: 'Mape',
+  delete_playlist: 'Dzēst atskaņošanas sarakstu',
+  delete_playlist_confirmation: 'Vai tiešām vēlaties dzēst atskaņošanas sarakstu {name}? Šo darbību nevar atsaukt.',
+  delete_folder: 'Dzēst mapi',
+  delete_folder_confirmation: 'Vai tiešām vēlaties dzēst mapi {name}? Šo darbību nevar atsaukt.',
+  delete_playlist_success: 'Atskaņošanas saraksts veiksmīgi dzēsts',
+  delete_playlist_error: 'Neizdevās dzēst atskaņošanas sarakstu',
+  delete_folder_success: 'Mape veiksmīgi dzēsta',
+  delete_folder_error: 'Neizdevās dzēst mapi',
 } satisfies Record<TranslationKey, string>
