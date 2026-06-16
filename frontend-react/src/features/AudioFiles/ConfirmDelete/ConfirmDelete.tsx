@@ -15,7 +15,6 @@ const ConfirmDelete = ({ open, setOpen, songIds }: ConfirmDeleteProps) => {
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: ['songs'],
-        stale: true,
       })
       toast({ message: 'files_delete_success' })
       setOpen(false)

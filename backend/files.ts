@@ -338,15 +338,32 @@ router.delete('', authenticateSession, async (req, res) => {
 
     // Remove files for confirmed deleted IDs
     const deleteResults = await Promise.allSettled(
-      songIds.map((songId) => fsPromises.unlink(getFilePath(userId.toString(), songId.toString()))),
+      songIds.map((songId) => {
+        const filePath = getFilePath(userId.toString(), songId.toString())
+        console.log('[DELETE] Attempting to unlink:', filePath) // <-- add this
+        return fsPromises.unlink(filePath)
+      }),
     )
 
-    const failed = deleteResults.filter((r) => r.status === 'rejected').length
+    const failed = deleteResults.filter((r) => r.status === 'rejected')
 
-    res.status(200).json({
-      deleted: result.affectedRows,
-      ...(failed > 0 && { warning: `${failed} file(s) could not be removed from disk` }),
+    // Log the actual errors instead of just counting
+    failed.forEach((r) => {
+      if (r.status === 'rejected') console.error('[DELETE] unlink failed:', r.reason)
     })
+
+    const failedCount = deleteResults.filter((r) => r.status === 'rejected').length
+
+    if (failedCount == songIds.length)
+      res.status(500).json({
+        deleted: result.affectedRows,
+        message: `Failed to delete all requested files`,
+      })
+    else
+      res.status(200).json({
+        deleted: result.affectedRows,
+        ...(failedCount > 0 && { message: `${failedCount} file(s) could not be removed from disk` }),
+      })
   } catch {
     await conn.rollback()
     res.sendStatus(500)
