@@ -6,6 +6,7 @@ const db = mysql.createPool({
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
   port: Number(process.env.MYSQL_PORT),
+  ssl: { rejectUnauthorized: false },
 })
 
 export default db
