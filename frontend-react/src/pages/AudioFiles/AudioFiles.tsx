@@ -68,13 +68,17 @@ const AudioFiles = () => {
   const handlePlayPlaylist = () => {
     if (!rows) return
     const track = rows[0]
+    handlePlayRow(track)
+  }
+
+  const handlePlayRow = (row: DBSong) => {
     play({
-      artist: track.artist ?? '',
-      duration: track.duration_s,
-      image: track.image_base64,
-      title: track.title,
+      artist: row.artist ?? '',
+      duration: row.duration_s,
+      image: row.image_base64,
+      title: row.title,
       type: 'song',
-      src: track.id.toString(),
+      src: row.id.toString(),
       playlistRows: rows,
       playlistID: 'all_files',
     })
@@ -96,6 +100,7 @@ const AudioFiles = () => {
           setOrderState={setOrderState}
           height='calc(100% - 96px)'
           playlistID='all_files'
+          onRowDoubleClick={handlePlayRow}
         />
       )}
 

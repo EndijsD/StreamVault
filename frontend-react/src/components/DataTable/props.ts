@@ -26,6 +26,7 @@ export interface DataTableProps<T extends { id: number | string }> {
   height: string
   onPlayPlaylist: () => void
   playlistID: string
+  onRowDoubleClick?: (row: T) => void
 }
 
 export interface ToolbarProps {

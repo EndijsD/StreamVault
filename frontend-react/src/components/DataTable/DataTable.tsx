@@ -20,6 +20,7 @@ export const DataTable = <T extends { id: number | string }>({
   height,
   onPlayPlaylist,
   playlistID,
+  onRowDoubleClick,
 }: DataTableProps<T>) => {
   const [selected, setSelected] = useState<(number | string)[]>([])
   const [displayType, setDisplayType] = useState<DisplayType>('list')
@@ -102,6 +103,11 @@ export const DataTable = <T extends { id: number | string }>({
                   const isSelected = selected.includes(row.id)
                   return (
                     <TableRow
+                      onDoubleClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onRowDoubleClick?.(row)
+                      }}
                       onContextMenu={(e) => handleContextMenu(e, row)}
                       hover
                       key={row.id}
