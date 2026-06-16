@@ -8,6 +8,7 @@ import type { Focus } from '../../features/EditLibraryItemDialog/types'
 import { useQuery } from '@tanstack/react-query'
 import axios, { isAxiosError } from 'axios'
 import Loader from '../../components/Loader'
+import PlaylistTable from '../../features/PlaylistTable'
 
 const fetch = async (id: number) => {
   const res = await axios.get<Playlist>(`custom/playlist/${id}`)
@@ -51,13 +52,13 @@ const PlaylistView = () => {
           )}
         </S.TextBox>
       </S.Header>
-
       <EditLibraryItemDialog
         item={{ description: data.description || '', image: data.image, name: data.name, id: data.id }}
         type='playlist'
         onOpenChange={() => setOpen(false)}
         open={open}
       />
+      <PlaylistTable />
     </S.Container>
   )
 }

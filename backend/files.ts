@@ -24,6 +24,11 @@ const ensureUserDir = async (userId: string) => {
   await fsPromises.mkdir(getUserDir(userId), { recursive: true })
 }
 
+const removeFileExt = (value: string) => {
+  const split = value.split('.')
+  return split.slice(0, split.length - 1).join('.')
+}
+
 //Temporary file storage directory where files are kept until placed into a valid directory
 const upload = multer({
   dest: 'tmp',
@@ -76,7 +81,7 @@ router.post('', authenticateSession, upload.array('files'), async (req, res) => 
           VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?)`,
           [
             r.originalName,
-            r.title ?? r.originalName,
+            r.title ?? removeFileExt(r.originalName),
             r.album,
             r.artist,
             r.mimeType,
@@ -238,12 +243,40 @@ router.get('', authenticateSession, async (req, res) => {
   }
 })
 
+router.get('/playlist/:playlistID', authenticateSession, async (req, res) => {
+  const playlistID = req.params.playlistID
+  const userId = req.user.id
+  const conn = await db.getConnection()
+
+  if (Array.isArray(playlistID))
+    return res.status(400).json({ message: 'Playlist id must be string type value containing 1 ID' })
+
+  try {
+    const [result] = await conn.query<DBSongReturn[]>(
+      `
+      SELECT songs.* 
+      FROM songs 
+      INNER JOIN songs_has_playlists ON songs.id = songs_has_playlists.songs_id 
+      INNER JOIN playlists ON songs_has_playlists.playlists_id = playlists.id 
+      WHERE songs.users_id = ? AND playlists.id = ?`,
+      [userId, playlistID],
+    )
+    const updated = result.map((el) => ({ ...el, image_base64: el.image_base64?.toString() ?? null }))
+
+    res.send(updated)
+  } catch (err) {
+    console.log(err)
+
+    res.sendStatus(500)
+  } finally {
+    conn.release()
+  }
+})
+
 // Get a section of audio
 router.get('/:songId', authenticateSession, async (req, res) => {
   const songId = req.params.songId
-  if (Array.isArray(songId)) {
-    return res.status(400).json({ message: 'Multiple ids for streaming are not allowed' })
-  }
+  if (Array.isArray(songId)) return res.status(400).json({ message: 'Multiple ids for streaming are not allowed' })
 
   const conn = await db.getConnection()
   const userId = req.user.id
@@ -281,7 +314,6 @@ router.get('/:songId', authenticateSession, async (req, res) => {
     let end: number
 
     if (match[1] === '') {
-      // suffix range: bytes=-500 -> last 500 bytes
       const suffixLength = parseInt(match[2], 10)
       start = Math.max(fileSize - suffixLength, 0)
       end = fileSize - 1
@@ -340,17 +372,9 @@ router.delete('', authenticateSession, async (req, res) => {
     const deleteResults = await Promise.allSettled(
       songIds.map((songId) => {
         const filePath = getFilePath(userId.toString(), songId.toString())
-        console.log('[DELETE] Attempting to unlink:', filePath) // <-- add this
         return fsPromises.unlink(filePath)
       }),
     )
-
-    const failed = deleteResults.filter((r) => r.status === 'rejected')
-
-    // Log the actual errors instead of just counting
-    failed.forEach((r) => {
-      if (r.status === 'rejected') console.error('[DELETE] unlink failed:', r.reason)
-    })
 
     const failedCount = deleteResults.filter((r) => r.status === 'rejected').length
 

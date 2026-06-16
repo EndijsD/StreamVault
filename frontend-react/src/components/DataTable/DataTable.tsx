@@ -86,7 +86,7 @@ export const DataTable = <T extends { id: number | string }>({
           all={rows}
         />
       )}
-      <Box sx={{ width: '100%', height: height }}>
+      <Box sx={{ width: '100%', height: height ?? '100%' }}>
         <Paper sx={{ width: '100%', height: '100%' }}>
           <TableToolBar
             playlistID={playlistID}

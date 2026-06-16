@@ -1,32 +1,34 @@
-import DataTable from '../../components/DataTable'
-import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
-import type { DBSong } from '../../../../shared-types/types'
-import { useToast } from '../../assets/contexts/Toast/useToast'
-import { useState } from 'react'
-import { columns } from './columns'
-import type { Order } from '../../components/DataTable/props'
 import { CircularProgress } from '@mui/material'
+import type { DBSong } from '../../../../shared-types/types'
+import DataTable from '../../components/DataTable'
+import ConfirmDelete from '../AudioFiles/ConfirmDelete'
+import EditRowsDialog from '../AudioFiles/EditRowsDialog'
 import type { ContextMenuOption } from '../../components/DataTable/ContextMenu/props'
+import { useToast } from '../../assets/contexts/Toast/useToast'
 import { usePlayerContext } from '../../assets/contexts/PlayerContext/usePlayerContext'
-import EditRowsDialog from '../../features/AudioFiles/EditRowsDialog'
-import ConfirmDelete from '../../features/AudioFiles/ConfirmDelete'
-import type { DialogState } from './props'
-import { initData } from './data'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import type { Order } from '../../components/DataTable/props'
+import type { DialogState } from '../../pages/AudioFiles/props'
+import { initData } from '../../pages/AudioFiles/data'
+import axios from 'axios'
+import { useParams } from 'react-router'
+import { columns } from '../../pages/AudioFiles/columns'
 
-const fetch = async () => {
-  const res = await axios.get<DBSong[]>('/files')
+const fetch = async (playlistID: string) => {
+  const res = await axios.get<DBSong[]>(`/files/playlist/${playlistID}`)
   return res.data
 }
 
-const AudioFiles = () => {
+const PlaylistTable = () => {
   const toast = useToast()
+  const { id } = useParams()
   const { play } = usePlayerContext()
   const [orderState, setOrderState] = useState<Order<DBSong>>({ orderBy: null, orderDir: null })
   const [dialogState, setDialogState] = useState<DialogState>(initData)
   const { error, data, isPending } = useQuery({
-    queryKey: ['songs'],
-    queryFn: fetch,
+    queryKey: ['playlist_songs', id],
+    queryFn: () => fetch(id!),
   })
 
   const rows = data ?? []
@@ -81,7 +83,6 @@ const AudioFiles = () => {
       playlistID: 'all_files',
     })
   }
-
   return (
     <>
       {isPending ? (
@@ -96,12 +97,10 @@ const AudioFiles = () => {
           columns={columns}
           orderState={orderState}
           setOrderState={setOrderState}
-          height='calc(100% - 96px)'
           playlistID='all_files'
           onRowDoubleClick={handlePlayRow}
         />
       )}
-
       {dialogState.type == 'delete' ? (
         <ConfirmDelete open={dialogState.open} setOpen={() => setDialogState(initData)} songIds={dialogState.rows} />
       ) : (
@@ -111,4 +110,4 @@ const AudioFiles = () => {
   )
 }
 
-export default AudioFiles
+export default PlaylistTable
