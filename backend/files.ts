@@ -24,6 +24,11 @@ const ensureUserDir = async (userId: string) => {
   await fsPromises.mkdir(getUserDir(userId), { recursive: true })
 }
 
+const removeFileExt = (value: string) => {
+  const split = value.split('.')
+  return split.slice(0, split.length - 1).join('.')
+}
+
 //Temporary file storage directory where files are kept until placed into a valid directory
 const upload = multer({
   dest: 'tmp',
@@ -76,7 +81,7 @@ router.post('', authenticateSession, upload.array('files'), async (req, res) => 
           VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?)`,
           [
             r.originalName,
-            r.title ?? r.originalName,
+            r.title ?? removeFileExt(r.originalName),
             r.album,
             r.artist,
             r.mimeType,
@@ -309,7 +314,6 @@ router.get('/:songId', authenticateSession, async (req, res) => {
     let end: number
 
     if (match[1] === '') {
-      // suffix range: bytes=-500 -> last 500 bytes
       const suffixLength = parseInt(match[2], 10)
       start = Math.max(fileSize - suffixLength, 0)
       end = fileSize - 1
@@ -368,17 +372,9 @@ router.delete('', authenticateSession, async (req, res) => {
     const deleteResults = await Promise.allSettled(
       songIds.map((songId) => {
         const filePath = getFilePath(userId.toString(), songId.toString())
-        console.log('[DELETE] Attempting to unlink:', filePath) // <-- add this
         return fsPromises.unlink(filePath)
       }),
     )
-
-    const failed = deleteResults.filter((r) => r.status === 'rejected')
-
-    // Log the actual errors instead of just counting
-    failed.forEach((r) => {
-      if (r.status === 'rejected') console.error('[DELETE] unlink failed:', r.reason)
-    })
 
     const failedCount = deleteResults.filter((r) => r.status === 'rejected').length
 
