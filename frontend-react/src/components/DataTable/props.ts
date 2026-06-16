@@ -23,7 +23,7 @@ export interface DataTableProps<T extends { id: number | string }> {
   orderState: Order<T>
   setOrderState: Dispatch<SetStateAction<Order<T>>>
   options?: ContextMenuOption<T>[]
-  height: string
+  height?: string
   onPlayPlaylist: () => void
   playlistID: string
   onRowDoubleClick?: (row: T) => void

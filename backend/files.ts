@@ -238,12 +238,40 @@ router.get('', authenticateSession, async (req, res) => {
   }
 })
 
+router.get('/playlist/:playlistID', authenticateSession, async (req, res) => {
+  const playlistID = req.params.playlistID
+  const userId = req.user.id
+  const conn = await db.getConnection()
+
+  if (Array.isArray(playlistID))
+    return res.status(400).json({ message: 'Playlist id must be string type value containing 1 ID' })
+
+  try {
+    const [result] = await conn.query<DBSongReturn[]>(
+      `
+      SELECT songs.* 
+      FROM songs 
+      INNER JOIN songs_has_playlists ON songs.id = songs_has_playlists.songs_id 
+      INNER JOIN playlists ON songs_has_playlists.playlists_id = playlists.id 
+      WHERE songs.users_id = ? AND playlists.id = ?`,
+      [userId, playlistID],
+    )
+    const updated = result.map((el) => ({ ...el, image_base64: el.image_base64?.toString() ?? null }))
+
+    res.send(updated)
+  } catch (err) {
+    console.log(err)
+
+    res.sendStatus(500)
+  } finally {
+    conn.release()
+  }
+})
+
 // Get a section of audio
 router.get('/:songId', authenticateSession, async (req, res) => {
   const songId = req.params.songId
-  if (Array.isArray(songId)) {
-    return res.status(400).json({ message: 'Multiple ids for streaming are not allowed' })
-  }
+  if (Array.isArray(songId)) return res.status(400).json({ message: 'Multiple ids for streaming are not allowed' })
 
   const conn = await db.getConnection()
   const userId = req.user.id
