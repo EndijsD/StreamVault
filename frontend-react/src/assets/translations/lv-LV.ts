@@ -143,4 +143,10 @@ export default {
   empty_folder_description: 'Pašlaik šajā mapē nav satura.',
   empty_library_title: 'Jūsu bibliotēka ir tukša',
   empty_library_description: 'Sāciet, izveidojot atskaņošanas sarakstu vai mapi.',
+  add_to_playlist: 'Pievienot atskaņošanas sarakstam',
+  add_to_playlist_success: 'Pievienots atskaņošanas sarakstam veiksmīgi',
+  add_to_playlist_error: 'Neizdevās pievienot atskaņošanas sarakstam',
+  download: 'Lejupielādēt',
+  download_success: 'Lejupielāde veiksmīga',
+  download_error: 'Neizdevās lejupielādēt',
 } satisfies Record<TranslationKey, string>

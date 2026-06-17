@@ -6,29 +6,23 @@ import TableContainer from '@mui/material/TableContainer'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import type { DataTableProps, DisplayType } from './props'
-import { useState, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react'
 import TableHeader from './TableHeader'
 import TableToolBar from './TableToolBar'
-import ContextMenu from './ContextMenu'
 
 export const DataTable = <T extends { id: number | string }>({
   rows,
   columns,
   orderState,
   setOrderState,
-  options,
   height,
   onPlayPlaylist,
   playlistID,
   onRowDoubleClick,
+  onContextMenu,
 }: DataTableProps<T>) => {
   const [selected, setSelected] = useState<(number | string)[]>([])
   const [displayType, setDisplayType] = useState<DisplayType>('list')
-  const [contextMenuState, setContextMenuState] = useState<{
-    open: boolean
-    row: T | null
-    pos: { x: number; y: number } | null
-  }>({ open: false, row: null, pos: null })
 
   const handleRequestSort = (_: MouseEvent<unknown>, property: keyof T) => {
     setOrderState((prev) => ({ orderBy: property, orderDir: prev.orderDir === 'asc' ? 'desc' : 'asc' }))
@@ -37,6 +31,7 @@ export const DataTable = <T extends { id: number | string }>({
   const handleRowClick = (e: MouseEvent<unknown>, id: number | string) => {
     e.preventDefault()
     e.stopPropagation()
+
     if (e.ctrlKey || e.metaKey) {
       setSelected((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]))
     } else if (e.shiftKey && selected.length > 0) {
@@ -56,36 +51,30 @@ export const DataTable = <T extends { id: number | string }>({
     return rows.filter((row) => selected.includes(row.id))
   }
 
-  const handleContextMenu = (event: MouseEvent<HTMLTableRowElement, globalThis.MouseEvent>, row: T) => {
-    event.preventDefault()
-    if (selected.length === 0 || !selected.includes(row.id)) handleRowClick(event, row.id)
-    setContextMenuState((prev) =>
-      prev.open
-        ? { open: false, row: null, pos: null }
-        : { open: true, row, pos: { x: event.clientX, y: event.clientY } },
-    )
-  }
-
   const { orderBy, orderDir } = orderState
   const sortFn = columns.find((el) => el.id == orderBy)?.sort
   const visibleRows =
     orderBy && orderDir && sortFn ? rows.sort((a, b) => (orderDir == 'asc' ? sortFn(a, b) : sortFn(b, a))) : rows
   const dense = displayType == 'compact'
 
-  const { pos, open, row } = contextMenuState
+  useEffect(() => {
+    const handleClickOutside = (e: globalThis.MouseEvent) => {
+      const target = e.target as HTMLElement
+
+      if (!target.closest("[data-row='true']")) {
+        setSelected([])
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   return (
     <>
-      {pos && open && row && options && (
-        <ContextMenu<T>
-          anchorPosition={{ top: pos.y, left: pos.x }}
-          handleClose={() => setContextMenuState({ open: false, pos: null, row: null })}
-          options={options}
-          selectedRows={getSelectedRows()}
-          currentRow={row}
-          all={rows}
-        />
-      )}
       <Box sx={{ width: '100%', height: height ?? '100%' }}>
         <Paper sx={{ width: '100%', height: '100%' }}>
           <TableToolBar
@@ -103,12 +92,30 @@ export const DataTable = <T extends { id: number | string }>({
                   const isSelected = selected.includes(row.id)
                   return (
                     <TableRow
+                      onMouseDown={(e: React.MouseEvent) => e.shiftKey && e.preventDefault()}
+                      data-row
                       onDoubleClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
                         onRowDoubleClick?.(row)
                       }}
-                      onContextMenu={(e) => handleContextMenu(e, row)}
+                      onContextMenu={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+
+                        setSelected((prev) => [...prev, row.id])
+                        onContextMenu?.({
+                          position: {
+                            left: e.clientX,
+                            top: e.clientY,
+                          },
+                          data: {
+                            currentRow: row,
+                            selectedRows: [row, ...getSelectedRows()],
+                            allRows: rows,
+                          },
+                        })
+                      }}
                       hover
                       key={row.id}
                       selected={isSelected}

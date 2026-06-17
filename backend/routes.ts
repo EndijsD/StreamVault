@@ -10,7 +10,7 @@ router.use('/auth', auth)
 router.use('/custom', custom)
 router.use('/files', files)
 
-const generalRoutes = ['users', 'folders', 'playlists', 'songs']
+const generalRoutes = ['users', 'folders', 'playlists', 'songs', 'folders_has_playlists', 'songs_has_playlists']
 
 generalRoutes.forEach((route) => router.use(`/${route}`, general))
 

@@ -1,7 +1,7 @@
-import { Delete, Folder, LibraryMusic, Radio } from '@mui/icons-material'
+import { Audiotrack, Delete, Folder, LibraryMusic, Radio } from '@mui/icons-material'
 import * as S from './style'
 import type { Props } from './types'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
 import { Tooltip } from '@mui/material'
@@ -25,6 +25,8 @@ const CustomImage = ({ type, size, image, onImageChange, autoOpen }: Props) => {
   const toast = useToast()
   const { t } = useAppContext()
   const hasOpenedRef = useRef(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragCounter = useRef(0)
 
   useEffect(() => {
     if (!autoOpen) return
@@ -43,9 +45,7 @@ const CustomImage = ({ type, size, image, onImageChange, autoOpen }: Props) => {
     }
   }, [autoOpen])
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-
+  const handleFile = async (file: File | undefined) => {
     if (!file) return
 
     if (!isImageFile(file)) {
@@ -66,19 +66,54 @@ const CustomImage = ({ type, size, image, onImageChange, autoOpen }: Props) => {
     onImageChange?.(base64)
   }
 
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    handleFile(file)
+  }
+
   const display = image ? (
     <S.Image size={size} src={image} />
   ) : (
     <S.Empty size={size}>
-      {type === 'playlist' ? <LibraryMusic /> : type === 'folder' ? <Folder /> : type === 'station' && <Radio />}
+      {type === 'playlist' ? (
+        <LibraryMusic />
+      ) : type === 'folder' ? (
+        <Folder />
+      ) : type === 'station' ? (
+        <Radio />
+      ) : (
+        type === 'music' && <Audiotrack />
+      )}
     </S.Empty>
   )
 
   if (onImageChange)
     return (
-      // <Tooltip title={t('upload_image_tooltip').replace('{size}', MAX_SIZE_MB.toString())}>
       <S.Relative>
-        <S.StyledButton onClick={() => inputRef.current?.click()}>{display}</S.StyledButton>
+        <S.StyledButton
+          isDragging={isDragging}
+          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={() => {
+            dragCounter.current++
+            setIsDragging(true)
+          }}
+          onDragLeave={() => {
+            dragCounter.current--
+
+            if (dragCounter.current === 0) {
+              setIsDragging(false)
+            }
+          }}
+          onDrop={(e) => {
+            dragCounter.current = 0
+            setIsDragging(false)
+            handleDrop(e)
+          }}
+          onClick={() => inputRef.current?.click()}
+        >
+          {display}
+        </S.StyledButton>
 
         {image && (
           <Tooltip title={t('delete')}>
@@ -93,9 +128,8 @@ const CustomImage = ({ type, size, image, onImageChange, autoOpen }: Props) => {
           </Tooltip>
         )}
 
-        <input ref={inputRef} type='file' accept='image/*' hidden onChange={handleChange} />
+        <input ref={inputRef} type='file' accept='image/*' hidden onChange={(e) => handleFile(e.target.files?.[0])} />
       </S.Relative>
-      // </Tooltip>
     )
 
   return display

@@ -1,15 +1,19 @@
 import { Box, Button, IconButton, styled } from '@mui/material'
 
 export const Image = styled('img')<{ size: string | number }>(({ theme, size }) => ({
-  height: size,
-  width: size,
+  minHeight: size,
+  minWidth: size,
+  maxHeight: size,
+  maxWidth: size,
   borderRadius: theme.shape.borderRadius,
   objectFit: 'cover',
 }))
 
 export const Empty = styled(Box)<{ size: string | number }>(({ theme, size }) => ({
-  height: size,
-  width: size,
+  minHeight: size,
+  minWidth: size,
+  maxHeight: size,
+  maxWidth: size,
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
@@ -23,9 +27,23 @@ export const Empty = styled(Box)<{ size: string | number }>(({ theme, size }) =>
   },
 }))
 
-export const StyledButton = styled(Button)(({ theme }) => ({
+export const StyledButton = styled(Button, {
+  shouldForwardProp: (prop) => prop !== 'isDragging',
+})<{ isDragging: boolean }>(({ theme, isDragging }) => ({
   padding: 0,
   border: `2px dashed ${theme.palette.grey[400]}`,
+
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: theme.palette.action.active,
+    pointerEvents: 'none',
+    opacity: isDragging ? 1 : 0,
+    transition: 'opacity .2s ease-out',
+  },
+
+  borderColor: isDragging ? theme.palette.primary.main : undefined,
 
   '&:hover': {
     borderColor: theme.palette.primary.main,

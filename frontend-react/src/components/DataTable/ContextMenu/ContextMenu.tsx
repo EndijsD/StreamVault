@@ -30,10 +30,10 @@ const ContextMenu = <T extends { id: number | string }>({
     >
       {options.map((option, i) => (
         <MenuItem
-          onClick={(event) => {
+          onClick={(e) => {
             option.action(all, selectedRows, currentRow)
             handleClose()
-            event.stopPropagation()
+            e.stopPropagation()
           }}
           key={i}
         >

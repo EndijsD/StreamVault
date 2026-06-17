@@ -1,8 +1,7 @@
-import type { SxProps } from '@mui/material'
+import type { PopoverPosition, SxProps } from '@mui/material'
 import type { TranslationKey } from '../../assets/translations'
 import type { Theme } from '@mui/material/styles'
 import type { Dispatch, SetStateAction } from 'react'
-import type { ContextMenuOption } from './ContextMenu/props'
 
 export type OrderDir = 'asc' | 'desc' | null
 export type DisplayType = 'list' | 'compact'
@@ -17,16 +16,22 @@ export interface ColumnDef<T> {
   render?: (value: T[keyof T], row: T, dense: boolean) => React.ReactNode
 }
 
+export interface TableContextData<T> {
+  currentRow: T
+  selectedRows: T[]
+  allRows: T[]
+}
+
 export interface DataTableProps<T extends { id: number | string }> {
   rows: T[]
   columns: ColumnDef<T>[]
   orderState: Order<T>
   setOrderState: Dispatch<SetStateAction<Order<T>>>
-  options?: ContextMenuOption<T>[]
   height?: string
   onPlayPlaylist: () => void
   playlistID: string
   onRowDoubleClick?: (row: T) => void
+  onContextMenu?: ({ data, position }: { data: TableContextData<T>; position: PopoverPosition }) => void
 }
 
 export interface ToolbarProps {

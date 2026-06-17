@@ -2,7 +2,7 @@ import type { DBSong } from '../../../../shared-types/types'
 import type { ColumnDef } from '../../components/DataTable/props'
 import * as S from './style'
 import { formatDate } from '../../functions'
-import AudiotrackIcon from '@mui/icons-material/Audiotrack'
+import CustomImage from '../../components/CustomImage'
 
 const formatDuration = (seconds?: number | null) => {
   if (seconds == null) return '-'
@@ -21,15 +21,7 @@ export const columns: ColumnDef<DBSong>[] = [
     sort: (a, b) => a.title.localeCompare(b.title),
     render: (_, row, dense) => (
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        {dense ? (
-          <></>
-        ) : row.image_base64 ? (
-          <img src={row.image_base64} style={{ height: 42, width: 42, borderRadius: 4, objectFit: 'cover' }} />
-        ) : (
-          <S.NoImage>
-            <AudiotrackIcon style={{ color: '#fff', fontSize: 20 }} />
-          </S.NoImage>
-        )}
+        {dense ? <></> : <CustomImage size={42} type='music' image={row.image_base64} />}
 
         <S.TableText>{row.title}</S.TableText>
       </div>

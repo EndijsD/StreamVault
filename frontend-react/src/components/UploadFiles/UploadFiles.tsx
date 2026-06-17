@@ -122,7 +122,7 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth>
+    <Dialog open={open} onClose={() => !isPending && handleClose()} fullWidth>
       <S.StyledDialogTitle>
         <S.TitleTop>
           <Box flex={1}>
@@ -135,7 +135,7 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
           </Box>
 
           <div>
-            <IconButton onClick={handleClose} size='small'>
+            <IconButton onClick={() => !isPending && handleClose} size='small'>
               <CloseIcon fontSize='small' />
             </IconButton>
           </div>
@@ -237,7 +237,7 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
           {t('upload')} {files.length > 0 ? `${files.length} ${files.length == 1 ? t('file') : t('files')}` : ''}
         </Button>
 
-        <Button onClick={handleClose} variant='outlined'>
+        <Button onClick={handleClose} variant='outlined' disabled={isPending}>
           {t('cancel')}
         </Button>
       </DialogActions>

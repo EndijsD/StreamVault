@@ -265,8 +265,6 @@ router.get('/playlist/:playlistID', authenticateSession, async (req, res) => {
 
     res.send(updated)
   } catch (err) {
-    console.log(err)
-
     res.sendStatus(500)
   } finally {
     conn.release()

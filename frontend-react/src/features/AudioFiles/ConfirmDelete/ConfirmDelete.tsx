@@ -5,6 +5,7 @@ import { useAppContext } from '../../../assets/contexts/App/useAppContext'
 import { useToast } from '../../../assets/contexts/Toast/useToast'
 import { queryClient } from '../../../assets/QueryClient'
 import type { ConfirmDeleteProps } from './props'
+import type { DBSong } from '../../../../../shared-types/types'
 
 const ConfirmDelete = ({ open, setOpen, songIds }: ConfirmDeleteProps) => {
   const { t } = useAppContext()
@@ -13,9 +14,10 @@ const ConfirmDelete = ({ open, setOpen, songIds }: ConfirmDeleteProps) => {
   const { mutate, isPending } = useMutation({
     mutationFn: () => axios.delete('files', { data: { songIds } }),
     onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['songs'],
-      })
+      queryClient.setQueryData<DBSong[]>(['songs'], (old) => old?.filter((s) => !songIds.includes(s.id)))
+      // queryClient.setQueryData<DBSong[]>(['playlist_songs'], (old) => old?.filter((s) => !songIds.includes(s.id)))
+      queryClient.invalidateQueries({ queryKey: ['playlist_songs'] })
+
       toast({ message: 'files_delete_success' })
       setOpen(false)
     },

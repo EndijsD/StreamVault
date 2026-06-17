@@ -141,4 +141,10 @@ export default {
   empty_folder_description: 'Currently this folder is empty.',
   empty_library_title: 'Your library is empty',
   empty_library_description: 'Start by creating a playlist or folder.',
+  add_to_playlist: 'Add to playlist',
+  add_to_playlist_success: 'Added to playlist successfully',
+  add_to_playlist_error: 'Failed to add to playlist',
+  download: 'Download',
+  download_success: 'Downloaded successfully',
+  download_error: 'Failed to download',
 } satisfies Record<string, string>

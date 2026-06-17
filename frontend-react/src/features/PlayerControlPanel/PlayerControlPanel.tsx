@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Box, IconButton, Typography, Stack, Tooltip, useTheme, tooltipClasses } from '@mui/material'
+import { Box, IconButton, Typography, Stack, Tooltip, tooltipClasses } from '@mui/material'
 import {
   SkipPrevious,
   SkipNext,
@@ -17,13 +17,12 @@ import * as S from './styles'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
 import { formatTime } from './functions'
 import { usePlayerContext } from '../../assets/contexts/PlayerContext/usePlayerContext'
+import CustomImage from '../../components/CustomImage'
 
 const PlayerControlPanel = () => {
   const { t } = useAppContext()
-  const theme = useTheme()
   const { playerState, playerRef, trackInfo, setPlayerStateValue, changeTrack } = usePlayerContext()
   const { isPlaying, isShuffle, progress, repeatMode, volume } = playerState
-
   const [prevVolume, setPrevVolume] = useState(70)
   const [tempProgress, setTempProgress] = useState(progress)
   const [isDragging, setIsDragging] = useState(false)
@@ -61,20 +60,8 @@ const PlayerControlPanel = () => {
       />
       <S.ContentGrid>
         <S.SongBox>
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 1.5,
-              ...(image
-                ? { backgroundImage: `url(${image})`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }
-                : {
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                    flexShrink: 0,
-                    boxShadow: `0 0 10px ${theme.palette.primary.main}80`,
-                  }),
-            }}
-          />
+          <CustomImage size={48} type={type === 'song' ? 'music' : 'station'} image={image} />
+
           <S.TextBox>
             <Tooltip
               placement='top'

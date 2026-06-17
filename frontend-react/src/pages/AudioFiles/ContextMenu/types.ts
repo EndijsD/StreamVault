@@ -1,5 +1,5 @@
 import type { PopoverPosition } from '@mui/material'
-import type { LibraryItem } from '../../../../../shared-types/types'
+import type { DBSong } from '../../../../../shared-types/types'
 
 interface OpenByElement {
   anchorReference: 'anchorEl'
@@ -16,8 +16,7 @@ export type ContextMenuOpen = OpenByElement | OpenByPosition | null
 export interface Props {
   anchor: ContextMenuOpen
   onClose: () => void
-  parentId?: number
-  item?: LibraryItem | null
+  item?: { currentRow: DBSong; selectedRows: DBSong[]; allRows: DBSong[] } | null
 }
 
-export type Open = 'add' | 'deletePlaylist' | 'deleteFolder' | false
+export type Open = 'delete' | 'edit' | false

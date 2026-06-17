@@ -601,4 +601,52 @@ router.get('/search', authenticateSession, async (req, res) => {
   }
 })
 
+router.get('/playlists', authenticateSession, async (req, res) => {
+  try {
+    const songIds = String(req.query.songIds ?? '')
+      .split(',')
+      .map(Number)
+      .filter(Number.isInteger)
+
+    let query = `
+      SELECT p.*
+      FROM playlists p
+      WHERE p.users_id = ?
+    `
+
+    const params: (number | string)[] = [req.user.id]
+
+    if (songIds.length > 0) {
+      query += `
+        AND NOT EXISTS (
+          SELECT 1
+          FROM songs_has_playlists shp
+          WHERE shp.playlists_id = p.id
+          AND shp.songs_id IN (${songIds.map(() => '?').join(',')})
+        )
+      `
+
+      params.push(...songIds)
+    }
+
+    query += ` ORDER BY p.name ASC`
+
+    const [rows] = await db.query<PlaylistRow[]>(query, params)
+
+    const playlists: Playlist[] = rows.map((row) => ({
+      type: 'playlist',
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      image: row.image ? row.image.toString() : null,
+    }))
+
+    res.json(playlists)
+  } catch (err) {
+    res.status(500).json({
+      message: getErrorMessage(err),
+    })
+  }
+})
+
 export default router

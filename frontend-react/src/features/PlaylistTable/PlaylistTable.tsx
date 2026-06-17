@@ -1,19 +1,15 @@
-import { CircularProgress } from '@mui/material'
+import { CircularProgress, type PopoverPosition } from '@mui/material'
 import type { DBSong } from '../../../../shared-types/types'
 import DataTable from '../../components/DataTable'
-import ConfirmDelete from '../AudioFiles/ConfirmDelete'
-import EditRowsDialog from '../AudioFiles/EditRowsDialog'
-import type { ContextMenuOption } from '../../components/DataTable/ContextMenu/props'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import { usePlayerContext } from '../../assets/contexts/PlayerContext/usePlayerContext'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { Order } from '../../components/DataTable/props'
-import type { DialogState } from '../../pages/AudioFiles/props'
-import { initData } from '../../pages/AudioFiles/data'
+import type { Order, TableContextData } from '../../components/DataTable/props'
 import axios from 'axios'
 import { useParams } from 'react-router'
 import { columns } from '../../pages/AudioFiles/columns'
+import ContextMenu from '../../pages/AudioFiles/ContextMenu'
 
 const fetch = async (playlistID: string) => {
   const res = await axios.get<DBSong[]>(`/files/playlist/${playlistID}`)
@@ -25,43 +21,15 @@ const PlaylistTable = () => {
   const { id } = useParams()
   const { play } = usePlayerContext()
   const [orderState, setOrderState] = useState<Order<DBSong>>({ orderBy: null, orderDir: null })
-  const [dialogState, setDialogState] = useState<DialogState>(initData)
   const { error, data, isPending } = useQuery({
-    queryKey: ['playlist_songs', id],
+    queryKey: ['playlist_songs', +(id ?? 0)],
     queryFn: () => fetch(id!),
+    enabled: !!id,
   })
+  const [menu, setMenu] = useState<PopoverPosition | null>(null)
+  const [item, setItem] = useState<TableContextData<DBSong> | null>(null)
 
   const rows = data ?? []
-
-  const Options: ContextMenuOption<DBSong>[] = [
-    {
-      label: 'play',
-      action: (all, _, track) => {
-        play({
-          artist: track.artist ?? '',
-          duration: track.duration_s,
-          image: track.image_base64,
-          title: track.title,
-          type: 'song',
-          src: track.id.toString(),
-          playlistRows: all,
-          playlistID: 'all_files',
-        })
-      },
-    },
-    {
-      label: 'edit',
-      action: (_, selectedRows) => {
-        setDialogState({ type: 'edit', open: true, rows: selectedRows })
-      },
-    },
-    {
-      label: 'delete',
-      action: (_, selectedRows) => {
-        setDialogState({ type: 'delete', open: true, rows: selectedRows.map((el) => el.id) })
-      },
-    },
-  ]
 
   if (error) toast({ message: 'something_went_wrong', severity: 'error' })
 
@@ -92,20 +60,24 @@ const PlaylistTable = () => {
       ) : (
         <DataTable<DBSong>
           onPlayPlaylist={handlePlayPlaylist}
-          options={Options}
           rows={rows}
           columns={columns}
           orderState={orderState}
           setOrderState={setOrderState}
           playlistID='all_files'
           onRowDoubleClick={handlePlayRow}
+          onContextMenu={({ data, position }) => {
+            setMenu(position)
+            setItem(data)
+          }}
         />
       )}
-      {dialogState.type == 'delete' ? (
-        <ConfirmDelete open={dialogState.open} setOpen={() => setDialogState(initData)} songIds={dialogState.rows} />
-      ) : (
-        <EditRowsDialog open={dialogState.open} setOpen={() => setDialogState(initData)} rows={dialogState.rows} />
-      )}
+
+      <ContextMenu
+        anchor={menu && { anchorReference: 'anchorPosition', anchorPosition: menu }}
+        item={item}
+        onClose={() => setMenu(null)}
+      />
     </>
   )
 }
