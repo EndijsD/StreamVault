@@ -111,7 +111,9 @@ export const DataTable = <T extends { id: number | string }>({
                           },
                           data: {
                             currentRow: row,
-                            selectedRows: [row, ...getSelectedRows()],
+                            selectedRows: getSelectedRows().includes(row)
+                              ? getSelectedRows()
+                              : [row, ...getSelectedRows()],
                             allRows: rows,
                           },
                         })

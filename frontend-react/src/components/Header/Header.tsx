@@ -8,6 +8,7 @@ import { createSearchParams, useLocation, useNavigate, useSearchParams } from 'r
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import { useMutation } from '@tanstack/react-query'
 import UploadFiles from '../UploadFiles'
+import { queryClient } from '../../assets/QueryClient'
 
 const Header = () => {
   const { t, onUserChange } = useAppContext()
@@ -23,6 +24,7 @@ const Header = () => {
     mutationFn: () => axios.post('auth/logout'),
     onSuccess: () => {
       onUserChange(null)
+      queryClient.clear()
       nav('/login')
     },
     onError: () => {

@@ -135,7 +135,7 @@ const UploadFiles = ({ onOpenChange, open }: Props) => {
           </Box>
 
           <div>
-            <IconButton onClick={() => !isPending && handleClose()} size='small'>
+            <IconButton onClick={handleClose} size='small' disabled={isPending}>
               <CloseIcon fontSize='small' />
             </IconButton>
           </div>
