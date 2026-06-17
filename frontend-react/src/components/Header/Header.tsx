@@ -3,8 +3,8 @@ import * as S from './styles'
 import axios from 'axios'
 import { Logout, Person, Search, Settings, Upload } from '@mui/icons-material'
 import { useAppContext } from '../../assets/contexts/App/useAppContext'
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useEffect, useState } from 'react'
+import { createSearchParams, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { useToast } from '../../assets/contexts/Toast/useToast'
 import { useMutation } from '@tanstack/react-query'
 import UploadFiles from '../UploadFiles'
@@ -15,6 +15,9 @@ const Header = () => {
   const nav = useNavigate()
   const toast = useToast()
   const [openUpload, setOpenUpload] = useState(false)
+  const [query, setQuery] = useState('')
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => axios.post('auth/logout'),
@@ -29,6 +32,25 @@ const Header = () => {
 
   const handleClose = () => setAnchorEl(null)
 
+  const handleSearch = () => {
+    if (!query.trim()) return
+
+    nav({
+      pathname: '/search',
+      search: createSearchParams({ query }).toString(),
+    })
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery(searchParams.get('query') ?? '')
+  }, [searchParams])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (location.pathname !== '/search') setQuery('')
+  }, [location.pathname])
+
   return (
     <S.StyledAppBar>
       <S.StyledLink to='/library'>
@@ -42,12 +64,19 @@ const Header = () => {
           input: {
             startAdornment: (
               <InputAdornment position='start'>
-                <IconButton edge='start'>
+                <IconButton edge='start' onClick={handleSearch}>
                   <Search />
                 </IconButton>
               </InputAdornment>
             ),
           },
+        }}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            handleSearch()
+          }
         }}
       />
 

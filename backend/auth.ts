@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import type { RowDataPacket, ResultSetHeader } from 'mysql2'
 import { getErrorMessage } from './functions.ts'
-import type { User } from './types.ts'
+import type { UserRow } from './types.ts'
 import type { DBUserStripped } from '../shared-types/types.ts'
 
 const router = express.Router()
@@ -68,27 +68,27 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
 
-    const [rows] = await db.query<RowDataPacket[]>(`SELECT * FROM users WHERE email = ?`, [email])
+    const [rows] = await db.query<UserRow[]>(`SELECT * FROM users WHERE email = ?`, [email])
 
     if (rows.length < 1) return res.status(403).json({ message: 'Invalid credentials' })
     if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
 
     const user = { ...rows[0] }
-    const { password: hashPassword } = user
 
-    const isCorrectPass = bcrypt.compareSync(password, hashPassword)
+    const isCorrectPass = bcrypt.compareSync(password, user.password)
 
     if (!isCorrectPass) return res.status(403).json({ message: 'Invalid credentials' })
 
-    Object.keys(user).forEach((key) => {
-      if (user[key] === null) delete user[key]
-    })
+    const loginUser: DBUserStripped = {
+      id: user.id,
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      locale: user.locale,
+    }
 
-    delete user.refresh_token
-    delete user.password
-
-    await createSession(user as DBUserStripped, res)
-    return res.json(user)
+    await createSession(loginUser, res)
+    return res.json(loginUser)
   } catch (err) {
     res.status(500).json({ message: getErrorMessage(err) })
   }
@@ -156,14 +156,14 @@ router.get('/check', async (req, res) => {
   if (!secret) return res.sendStatus(500)
 
   try {
-    const user = jwt.verify(accessToken, secret) as User
+    const user = jwt.verify(accessToken, secret) as DBUserStripped
 
-    const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM users WHERE id = ?', [user.id])
+    const [rows] = await db.query<UserRow[]>('SELECT * FROM users WHERE id = ?', [user.id])
 
     if (rows.length < 1) return res.status(403).json({ message: 'Invalid token' })
     if (rows.length > 1) return res.status(403).json({ message: 'Duplicate accounts' })
 
-    const dbUser = rows[0] as unknown as User
+    const dbUser = rows[0]
 
     const updatedUser: DBUserStripped = {
       email: dbUser.email,
@@ -187,7 +187,7 @@ export const authenticateSession = (req: Request, res: Response, next: NextFunct
   if (!secret) return res.sendStatus(500)
 
   try {
-    const user = jwt.verify(accessToken, secret) as User
+    const user = jwt.verify(accessToken, secret) as DBUserStripped
 
     req.user = user
     next()

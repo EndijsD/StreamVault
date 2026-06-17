@@ -12,6 +12,7 @@ import Library from '../pages/Library'
 import RadioStations from '../pages/RadioStations'
 import AudioFiles from '../pages/AudioFiles'
 import PlaylistView from '../pages/PlaylistView'
+import Search from '../pages/Search'
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      {
+        path: 'search',
+        element: <Search />,
+      },
       {
         element: <Home />,
         children: [

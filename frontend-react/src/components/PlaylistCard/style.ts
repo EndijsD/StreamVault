@@ -1,4 +1,4 @@
-import { Paper, styled } from '@mui/material'
+import { Paper, styled, Typography } from '@mui/material'
 
 export const Main = styled(Paper)(({ theme }) => ({
   position: 'relative',
@@ -48,3 +48,10 @@ export const Main = styled(Paper)(({ theme }) => ({
     opacity: 1,
   },
 }))
+
+export const Title = styled(Typography)({
+  width: 128,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+})

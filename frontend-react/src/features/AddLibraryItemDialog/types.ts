@@ -1,4 +1,4 @@
-import type { LibraryType } from '../../../../shared-types/types'
+import type { ItemType } from '../../../../shared-types/types'
 
 export interface PlaylistFolderAddForm {
   image: null | string
@@ -6,7 +6,7 @@ export interface PlaylistFolderAddForm {
   description: string
 }
 
-export type AddType = Exclude<LibraryType, 'station'>
+export type AddType = Extract<ItemType, 'playlist' | 'folder'>
 
 export interface Props {
   open: boolean
