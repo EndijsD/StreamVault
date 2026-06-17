@@ -273,7 +273,7 @@ router.get('/playlist/:playlistID', authenticateSession, async (req, res) => {
   }
 })
 
-// Get a section of audio
+// Returns section of file by byte range or the whole file at once if no range provided
 router.get('/:songId', authenticateSession, async (req, res) => {
   const songId = req.params.songId
   if (Array.isArray(songId)) return res.status(400).json({ message: 'Multiple ids for streaming are not allowed' })
@@ -304,8 +304,11 @@ router.get('/:songId', authenticateSession, async (req, res) => {
       return fs.createReadStream(filePath).pipe(res)
     }
 
-    const match = range.match(/^bytes=(\d*)-(\d*)$/)
-    if (!match || (!match[1] && !match[2])) {
+    //Gets request byte range values
+    //Range start with a valid string should be match[1] and range end should be match[2]
+    const [startStr, endStr] = range.replace('bytes=', '').split('-')
+
+    if (!startStr) {
       res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` })
       return res.end()
     }
@@ -313,21 +316,16 @@ router.get('/:songId', authenticateSession, async (req, res) => {
     let start: number
     let end: number
 
-    if (match[1] === '') {
-      const suffixLength = parseInt(match[2], 10)
-      start = Math.max(fileSize - suffixLength, 0)
-      end = fileSize - 1
-    } else {
-      start = parseInt(match[1], 10)
-      end = match[2] ? parseInt(match[2], 10) : fileSize - 1
-    }
+    const CHUNK_SIZE = 256 * 1000 // 256KB
 
+    start = parseInt(startStr)
+    end = endStr ? parseInt(endStr) : Math.min(start + CHUNK_SIZE - 1, fileSize - 1)
+
+    //Invalid range
     if (start >= fileSize || start > end) {
       res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` })
       return res.end()
     }
-
-    end = Math.min(end, fileSize - 1)
 
     res.writeHead(206, {
       'Content-Type': mime_type,
@@ -336,6 +334,7 @@ router.get('/:songId', authenticateSession, async (req, res) => {
       'Content-Length': end - start + 1,
     })
 
+    //Returns requested chunk
     const stream = fs.createReadStream(filePath, { start, end })
     stream.on('error', () => res.destroy())
     stream.pipe(res)
